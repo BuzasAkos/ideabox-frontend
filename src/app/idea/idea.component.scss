@@ -1,0 +1,74 @@
+.idea-list {
+    margin-top: 16px;
+}
+
+.list-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 8px;
+    //border-radius: 8px;
+    //box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+    border-bottom: solid 1px lightgray;
+    font-size: 16px;
+
+    .idea-user {
+        color: darkcyan;
+        font-size: 16px;
+    }
+
+    .idea-title {
+        color: darkslategrey;
+        font-weight: 800;
+        font-size: 18px;
+    }
+
+    .idea-desc {
+        color: darkslategray;
+        font-weight: normal;
+    }
+
+    .idea-footer {
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-start;
+        margin-top: 4px;
+        gap: 16px;
+        color: darkcyan;
+        font-size: 16px;
+    }
+
+}
+
+.idea-buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 16px;
+
+    .idea-button {
+        background-color: white;
+        color: darkcyan;
+        font-size: 14px;
+        font-weight: 600;
+        padding: 4px 8px;
+        border-radius: 4px;
+        border: 1px solid darkcyan;
+
+        &:hover {
+            background-color: cyan;
+            cursor: pointer;
+        }
+    }
+
+    .button-highlight {
+        background-color: darkcyan;
+        color: white;
+
+        &:hover {
+            background-color: lightgray;
+            cursor: pointer;
+        }
+    }
+}

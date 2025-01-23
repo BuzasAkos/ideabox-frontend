@@ -1,9 +1,11 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 
 @Injectable({
   providedIn: 'root'
 })
 export class IdeaSignalService {
+
+  user = signal<string>('Ákos');
 
   constructor() { }
 }

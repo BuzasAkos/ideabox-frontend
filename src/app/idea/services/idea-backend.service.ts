@@ -16,28 +16,39 @@ export class IdeaBackendService {
   constructor(private http: HttpClient) { }
 
   createIdea( payload: CreateIdeaDto): Observable<Idea> {
-    const url = `${this.baseUrl}/ideabox/idea`;
+    const url = `${this.baseUrl}/idea`;
     return this.http.post<Idea>(url, payload);
   }
 
-  getAllIdeas(): Observable<Idea[]> {
-    const url = `${this.baseUrl}/ideabox/ideas`;
-    return this.http.get<Idea[]>(url);
+  getAllIdeas(): Observable<{ideas: Idea[]}> {
+    const url = `${this.baseUrl}/ideas`;
+    return this.http.get<{ideas: Idea[]}>(url);
   }
   
   getIdea( id: string ): Observable<Idea> {
-    const url = `${this.baseUrl}/ideabox/idea/${id}`;
+    const url = `${this.baseUrl}/idea/${id}`;
     return this.http.get<Idea>(url);
   }
 
   updateIdea( id: string, payload: UpdateIdeaDto ): Observable<Idea>  {
-    const url = `${this.baseUrl}/ideabox/idea/${id}`;
+    const url = `${this.baseUrl}/idea/${id}`;
     return this.http.put<Idea>(url, payload);
   }
 
   removeIdea( id: string ): Observable<{message: string}> {
-    const url = `${this.baseUrl}/ideabox/idea/${id}`;
+    const url = `${this.baseUrl}/idea/${id}`;
     return this.http.delete<{message: string}>(url);
  }
+
+  addVote( id: string ): Observable<Idea> {
+    const url = `${this.baseUrl}/idea/${id}/vote`;
+    return this.http.patch<Idea>(url, null);
+  }
+
+  removeVote( id: string ): Observable<Idea> {
+    const url = `${this.baseUrl}/idea/${id}/unvote`;
+    return this.http.patch<Idea>(url, null);
+  }
+
 
 }

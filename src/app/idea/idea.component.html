@@ -3,5 +3,40 @@
 </div>
 
 <div class="idea-list">
-    List of ideas
+    @for (idea of ideas; track $index) {
+        <div class="list-item">
+            <div class="idea-user">
+                {{ idea.createdBy }}:
+            </div>
+            <div class="idea-title">
+                {{ idea.title }}
+            </div>
+            <div class="idea-desc">
+                {{ idea.description }}
+            </div>
+            <div class="idea-footer">
+                <span>
+                    {{ idea.voteCount }} votes
+                </span>
+                <span>
+                    {{ idea.comments.length }} comments
+                </span>
+            </div>
+            <div class="idea-buttons">
+                <button class="idea-button" 
+                    *ngIf="!votedFor(idea)"
+                    (click)="vote(idea._id)">
+                    Vote
+                </button>
+                <button class="idea-button button-highlight" 
+                    *ngIf="votedFor(idea)"
+                    (click)="unvote(idea._id)">
+                    Unvote
+                </button>
+                <button class="idea-button">
+                    Comment
+                </button>
+            </div>
+        </div>
+    }
 </div>
