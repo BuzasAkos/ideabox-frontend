@@ -1,4 +1,6 @@
 import { Component } from '@angular/core';
+import { IdeaBackendService } from './services/idea-backend.service';
+import { IdeaSignalService } from './services/idea-signal.service';
 
 @Component({
   selector: 'app-idea',
@@ -9,4 +11,9 @@ import { Component } from '@angular/core';
 })
 export class IdeaComponent {
 
+  constructor(
+    private ideaBackendService: IdeaBackendService,
+    protected ideaSignalService: IdeaSignalService,
+  ) {}
+  
 }

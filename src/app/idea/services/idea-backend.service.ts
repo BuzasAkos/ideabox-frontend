@@ -1,15 +1,15 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { environment } from '../../environments/environment';
-import { Idea } from './models/idea.entity';
-import { CreateIdeaDto } from './models/create-idea.dto';
-import { UpdateIdeaDto } from './models/update-idea.dto';
+import { environment } from '../../../environments/environment';
+import { Idea } from '../models/idea.entity';
+import { CreateIdeaDto } from '../models/create-idea.dto';
+import { UpdateIdeaDto } from '../models/update-idea.dto';
 import { Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
-export class IdeaService {
+export class IdeaBackendService {
 
   baseUrl: string = `${environment.backend_url}/ideabox`;
 
