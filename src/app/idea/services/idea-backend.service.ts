@@ -32,7 +32,7 @@ export class IdeaBackendService {
 
   updateIdea( id: string, payload: UpdateIdeaDto ): Observable<Idea>  {
     const url = `${this.baseUrl}/idea/${id}`;
-    return this.http.put<Idea>(url, payload);
+    return this.http.patch<Idea>(url, payload);
   }
 
   removeIdea( id: string ): Observable<{message: string}> {
@@ -49,6 +49,12 @@ export class IdeaBackendService {
     const url = `${this.baseUrl}/idea/${id}/unvote`;
     return this.http.patch<Idea>(url, null);
   }
+
+  getFavouriteIdeas(): Observable<{ideas: Idea[]}> {
+    const url = `${this.baseUrl}/ideas/favourite`;
+    return this.http.get<{ideas: Idea[]}>(url);
+  }
+  
 
 
 }

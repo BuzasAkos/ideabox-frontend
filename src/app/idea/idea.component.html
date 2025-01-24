@@ -1,12 +1,26 @@
-<div class="tabs">
-    All Ideas
+<div class="tabs-container">
+    @for (tab of tabs; track $index) {
+        <span
+            [class.tab-highlight]="tabState === $index"
+            (click)="changeTab($index)">
+            {{ tabs[$index] }}
+        </span>
+    }
+</div>
+
+<div class="action-buttons">
+    <button 
+        class="primary-button"
+        (click)="onPostClicked()">
+        Post a new idea
+    </button>
 </div>
 
 <div class="idea-list">
     @for (idea of ideas; track $index) {
         <div class="list-item">
             <div class="idea-user">
-                {{ idea.createdBy }}:
+                {{ idea.createdBy }} posted:
             </div>
             <div class="idea-title">
                 {{ idea.title }}
@@ -36,7 +50,134 @@
                 <button class="idea-button">
                     Comment
                 </button>
+                <img 
+                    *ngIf="idea.createdBy === ideaSignalService.user()"
+                    src="../../assets/edit-icon.svg" 
+                    alt="Edit idea" 
+                    height="30"
+                    class="action-icon"
+                    (click)="onEditClicked(idea)"
+                >
+                <img 
+                    *ngIf="idea.createdBy === ideaSignalService.user()"
+                    src="../../assets/remove-icon.svg" 
+                    alt="Remove idea" 
+                    height="30"
+                    class="action-icon"
+                    (click)="onRemoveClicked(idea._id)"
+                >
             </div>
         </div>
     }
 </div>
+
+@if (popupState) {
+    <div class="popup-container">
+      <div class="popup-window">
+          @if (popupState === 1) {
+            <div class="popup-title">
+                Post a new idea:
+            </div>
+            <form [formGroup]="newIdeaForm" (ngSubmit)="onSaveNewIdea()">
+              <div class="form-items">
+                <label for="title" class="form-label">
+                    Title:
+                </label>
+                <input 
+                    type="text" 
+                    class="form-input"
+                    formControlName="title"
+                    id="ideaTitle">
+                <label for="title" class="form-label">
+                    Description:
+                </label>
+                <textarea 
+                    type="text" 
+                    class="form-input"
+                    formControlName="description"
+                    id="ideaDescription">
+                </textarea>
+                </div>
+                <div class="action-buttons">
+                    <button 
+                        class="primary-button"
+                        type="submit"
+                        [disabled]="newIdeaForm.invalid">
+                        Save
+                    </button>
+                    <button 
+                        class="secondary-button"
+                        type="button"
+                        (click)="onCancelClicked()">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+          }
+
+          @if (popupState === 2) {
+            <div class="popup-title">
+                Edit your idea:
+            </div>
+            <form [formGroup]="newIdeaForm" (ngSubmit)="onSaveEditedIdea()">
+              <div class="form-items">
+                <label for="title" class="form-label">
+                    Title:
+                </label>
+                <input 
+                    type="text" 
+                    class="form-input"
+                    formControlName="title"
+                    id="ideaTitle">
+                <label for="title" class="form-label">
+                    Description:
+                </label>
+                <textarea 
+                    type="text" 
+                    class="form-input"
+                    formControlName="description"
+                    id="ideaDescription">
+                </textarea>
+                </div>
+                <div class="action-buttons">
+                    <button 
+                        class="primary-button"
+                        type="submit"
+                        [disabled]="newIdeaForm.invalid">
+                        Save
+                    </button>
+                    <button 
+                        class="secondary-button"
+                        type="button"
+                        (click)="onCancelClicked()">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+          }
+
+          @if (popupState === 3) {
+            <div class="popup-title">
+                Remove your idea:
+            </div>
+            <div class="popup-message">
+                Do you really want to remove this idea?
+            </div>
+            <div class="action-buttons">
+                <button 
+                    class="primary-button"
+                    type="button"
+                    (click)="removeIdea()">
+                    Remove
+                </button>
+                <button 
+                    class="secondary-button"
+                    type="button"
+                    (click)="onCancelClicked()">
+                    Cancel
+                </button>
+            </div>
+          }
+      </div>
+    </div>
+}

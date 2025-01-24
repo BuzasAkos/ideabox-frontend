@@ -1,5 +1,71 @@
+.tabs-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 32px;
+    margin: 4px 8px;
+    font-size: 18px;
+    font-weight: normal;
+    color: #e20074;
+    cursor: pointer;
+
+    .tab-highlight {
+        font-weight: 800;
+        text-decoration: underline;
+        color: black;
+    }
+}
+
+.action-buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 16px;
+    margin: 16px 16px 8px 16px;
+    padding-bottom: 8px;
+
+    .primary-button {
+        font-size: 16px;
+        padding: 8px 16px;
+        min-width: 100px;
+        background-color: #e20074;
+        color: white;
+        border: none;
+        border-radius: 8px;
+
+        &:hover {
+            background-color: #d20064;
+            cursor: pointer;
+        }
+
+        &:disabled {
+            background-color: lightgray;
+        }
+    }
+
+    .secondary-button {
+        font-size: 16px;
+        padding: 8px 16px;
+        min-width: 100px;
+        background-color: white;
+        color: darkslategray;
+        border: 1px solid darkslategray;
+        border-radius: 8px;
+
+        &:hover {
+            background-color: cyan;
+            cursor: pointer;
+        }
+
+        &:disabled {
+            background-color: lightgray;
+        }
+    }
+}
+
 .idea-list {
-    margin-top: 16px;
+    margin-top: 8px;
+    border-top: solid 1px lightgray;
 }
 
 .list-item {
@@ -8,8 +74,6 @@
     align-items: flex-start;
     gap: 8px;
     padding: 8px;
-    //border-radius: 8px;
-    //box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
     border-bottom: solid 1px lightgray;
     font-size: 16px;
 
@@ -21,7 +85,7 @@
     .idea-title {
         color: darkslategrey;
         font-weight: 800;
-        font-size: 18px;
+        font-size: 20px;
     }
 
     .idea-desc {
@@ -50,6 +114,7 @@
     .idea-button {
         background-color: white;
         color: darkcyan;
+        width: 90px;
         font-size: 14px;
         font-weight: 600;
         padding: 4px 8px;
@@ -70,5 +135,100 @@
             background-color: lightgray;
             cursor: pointer;
         }
+    }
+}
+
+.popup-container {
+    z-index: 990;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(128, 128, 128, 0.2);
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+
+    .popup-window {
+        z-index: 995;
+        background-color: white;
+        padding: 20px 10px;
+        min-width: 300px;
+        max-width: 450px;
+        min-height: 80px;
+        margin: 6px;
+        border-radius: 10px;
+        border: 1px solid gray;
+        box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+        display: flex;
+        flex-direction: column;
+        font-size: 16px;
+        gap: 10px;
+    }
+
+    .popup-title {
+        width: 100%;
+        text-align: center;
+        margin-bottom: 16px;
+        font-size: 22px;
+        color: darkslategray;
+    }
+
+    .popup-message {
+        width: 100%;
+        text-align: center;
+        margin-bottom: 16px;
+        font-size: 16px;
+        color: darkslategray;
+    }
+
+    .button-row {
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+        justify-content: center;
+        align-items: center;
+        margin-top: 30px;
+    }
+}
+
+.form-items {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 180px;
+    gap: 8px;
+    margin: 0 16px 16px 16px;
+    width: 100%;
+
+    .form-label {
+        color: darkcyan;
+        font-size: 16px;
+        font-weight: 600;
+        margin-top: 8px;
+    }
+
+    .form-input {
+        padding: 4px 8px;
+        font-size: 16px;
+        font-family: Arial, Helvetica, sans-serif;
+        border: solid 1px darkcyan;
+        color: darkslategray;
+        border-radius: 4px;
+        width: 250px;
+        max-width: 250px;
+        min-width: 250px;
+        max-height: 180px;
+        min-height: 25px;
+    }
+}
+
+.action-icon {
+    cursor: pointer;
+
+    &:hover {
+        background-color: cyan;
     }
 }
