@@ -25,7 +25,7 @@ export class IdeaComponent implements OnInit, OnDestroy {
   popupState: number = 0;
   isLoading: boolean = false;
   newIdeaForm!: FormGroup;
-  selectedIdeaId?: string;
+  selectedIdea?: Idea;
 
   constructor(
     private ideaBackendService: IdeaBackendService,
@@ -119,24 +119,23 @@ export class IdeaComponent implements OnInit, OnDestroy {
       title: idea.title,
       description: idea.description
     });
-    this.selectedIdeaId = idea._id;
+    this.selectedIdea = idea;
     this.newIdeaForm.get('title')?.disable();
     this.popupState = 2;
   }
 
   onSaveEditedIdea() {
-    if (this.newIdeaForm.invalid || !this.selectedIdeaId) return;
-    console.log(this.selectedIdeaId);
+    if (this.newIdeaForm.invalid || !this.selectedIdea) return;
     this.popupState = 0;
     this.isLoading = true;
     const idea: UpdateIdeaDto = {
       description: this.newIdeaForm.value.description,
     }
-    this.ideaBackendService.updateIdea(this.selectedIdeaId, idea).subscribe({
+    this.ideaBackendService.updateIdea(this.selectedIdea._id, idea).subscribe({
       next: (response) => {
+        this.selectedIdea = undefined;
         if (this.tabState === 0) this.loadAllIdeas();
         if (this.tabState === 1) this.loadFavouriteIdeas();
-        this.selectedIdeaId = undefined;
       },
       error: (err) => {
         console.log(err);
@@ -145,26 +144,31 @@ export class IdeaComponent implements OnInit, OnDestroy {
     })
   }
 
-  onRemoveClicked(id: string) {
-    this.selectedIdeaId = id;
+  onRemoveClicked(idea: Idea) {
+    this.selectedIdea = idea;
     this.popupState = 3;
   }
 
   removeIdea() {
-    if (!this.selectedIdeaId) return;
+    if (!this.selectedIdea) return;
     this.popupState = 0;
     this.isLoading = true;
-    this.ideaBackendService.removeIdea(this.selectedIdeaId).subscribe({
+    this.ideaBackendService.removeIdea(this.selectedIdea._id).subscribe({
       next: (response) => {
+        this.selectedIdea = undefined;
         if (this.tabState === 0) this.loadAllIdeas();
         if (this.tabState === 1) this.loadFavouriteIdeas();
-        this.selectedIdeaId = undefined;
       },
       error: (err) => {
         console.log(err);
         this.isLoading = false;
       }
     })
+  }
+
+  onDetailsClicked(idea: Idea) {
+    this.selectedIdea = idea;
+    this.popupState = 4;
   }
 
   onCancelClicked() {
