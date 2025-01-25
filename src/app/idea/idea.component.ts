@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { IdeaBackendService } from './services/idea-backend.service';
 import { IdeaSignalService } from './services/idea-signal.service';
-import { Idea } from './models/idea.entity';
+import { Idea, Comment } from './models/idea.entity';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CreateIdeaDto } from './models/create-idea.dto';
@@ -27,6 +27,7 @@ export class IdeaComponent implements OnInit, OnDestroy {
   newIdeaForm!: FormGroup;
   commentForm!: FormGroup;
   selectedIdea?: Idea;
+  selectedComment?: Comment;
 
   constructor(
     private ideaBackendService: IdeaBackendService,
@@ -39,6 +40,7 @@ export class IdeaComponent implements OnInit, OnDestroy {
     this.loadAllIdeas()
   }
 
+  // initializes forms with validators and default values
   initForms() {
     this.newIdeaForm = this.formBuilder.group({
       title: ["", [Validators.required, Validators.minLength(4), Validators.maxLength(40)]],
@@ -49,7 +51,7 @@ export class IdeaComponent implements OnInit, OnDestroy {
     });
   }
 
-  // load list of ideas
+  // load full list of ideas
   loadAllIdeas() {
     this.tabState = 0;
     this.isLoading = true;
@@ -66,6 +68,7 @@ export class IdeaComponent implements OnInit, OnDestroy {
     });
   }
 
+  // load list of ideas that the user has voted for
   loadFavouriteIdeas() {
     this.tabState = 1;
     this.isLoading = true;
@@ -82,21 +85,25 @@ export class IdeaComponent implements OnInit, OnDestroy {
     });
   }
 
+  // checks if the current user has voted for this idea
   votedFor(idea: Idea) {
     return !!idea.votes.find(i => i.createdBy === this.ideaSignalService.user());
   }
 
+  // switches to a selected tab (idea list)
   changeTab(index: number) {
     if (index === 0) this.loadAllIdeas();
     if (index === 1) this.loadFavouriteIdeas();
   }
 
+  // handled click on Post new idea button
   onPostClicked() {
     this.newIdeaForm.reset();
     this.newIdeaForm.enable();
     this.popupState = 1;
   }
 
+  // saves a new idea in the database
   onSaveNewIdea() {
     if (this.newIdeaForm.invalid) return;
     this.popupState = 0;
@@ -117,6 +124,7 @@ export class IdeaComponent implements OnInit, OnDestroy {
     })
   }
 
+  // handles click on edit icon for an idea
   onEditClicked(idea: Idea) {
     this.newIdeaForm.reset();
     this.newIdeaForm.patchValue({
@@ -128,6 +136,7 @@ export class IdeaComponent implements OnInit, OnDestroy {
     this.popupState = 2;
   }
 
+  // saves the updated idea in the database
   onSaveEditedIdea() {
     if (this.newIdeaForm.invalid || !this.selectedIdea) return;
     this.popupState = 0;
@@ -148,11 +157,13 @@ export class IdeaComponent implements OnInit, OnDestroy {
     })
   }
 
+  // handles click on remove icon for an idea
   onRemoveClicked(idea: Idea) {
     this.selectedIdea = idea;
     this.popupState = 3;
   }
 
+  // removes an idea from the database
   removeIdea() {
     if (!this.selectedIdea) return;
     this.popupState = 0;
@@ -170,12 +181,14 @@ export class IdeaComponent implements OnInit, OnDestroy {
     })
   }
 
+  // handles click on comments button or on vote/comment counter
   onDetailsClicked(idea: Idea) {
     this.selectedIdea = idea;
     this.commentForm.reset();
     this.popupState = 4;
   }
 
+  // saves a new comment for the selected idea to database
   onSendComment() {
     if (this.commentForm.invalid || !this.selectedIdea) return;
     const text = this.commentForm.value.text;
@@ -195,10 +208,44 @@ export class IdeaComponent implements OnInit, OnDestroy {
     });
   }
 
+  // handles click on remove icon next to a comment for an idea
+  onRemoveCommentClicked(comment: Comment) {
+    console.log(comment);
+    this.selectedComment = comment;
+    this.popupState = 5;
+  }
+
+  // removes a comment from the database
+  removeComment() {
+    if (!this.selectedComment || !this.selectedIdea) return;
+    this.isLoading = true;
+    this.ideaBackendService.removeComment(this.selectedIdea._id, this.selectedComment.id).subscribe({
+      next: (response) => {
+        this.selectedComment = undefined;
+        this.selectedIdea = undefined;
+        this.popupState = 0;
+        if (this.tabState === 0) this.loadAllIdeas();
+        if (this.tabState === 1) this.loadFavouriteIdeas();
+      },
+      error: (err) => {
+        console.log(err);
+        this.isLoading = false;
+      }
+    })
+  }
+
+  // handles cancel button in a popup: closes the window
   onCancelClicked() {
     this.popupState = 0;
   }
 
+  // handles keep button in a popup: returns to the details window
+  onKeepClicked() {
+    this.selectedComment = undefined;
+    this.popupState = 4;
+  }
+
+  // submits a vote for an idea and saves to the database
   vote(ideaId: string) {
     this.ideaBackendService.addVote(ideaId).subscribe({
       next: (response) => {
@@ -211,6 +258,7 @@ export class IdeaComponent implements OnInit, OnDestroy {
     })
   }
 
+  // removes the vote of the user from a specific idea
   unvote(ideaId: string) {
     this.ideaBackendService.removeVote(ideaId).subscribe({
       next: (response) => {

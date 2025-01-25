@@ -55,9 +55,9 @@ export class IdeaBackendService {
     return this.http.post<Idea>(url, payload);
   }
 
-  removeComment( id: string, commentId: string ): Observable<Idea> {
+  removeComment( id: string, commentId: string ): Observable<{message: string}> {
     const url = `${this.baseUrl}/idea/${id}/comment/${commentId}`;
-    return this.http.delete<Idea>(url);
+    return this.http.delete<{message: string}>(url);
   }
 
   getFavouriteIdeas(): Observable<{ideas: Idea[]}> {

@@ -220,12 +220,18 @@
                             (click)="onSendComment()">
                       </div>
                     </form>
-                    @for (comment of selectedIdea.comments.reverse(); track $index) {
+                    @for (comment of selectedIdea.comments; track $index) {
                         <div class="comment-header">
                             {{ comment.createdBy }} wrote on {{ comment.createdAt | date : "dd MMM, hh:mm" }}:
+                            <img src="../../assets/remove-icon.svg" 
+                                height="24px" 
+                                alt="remove comment"
+                                class="remove-comment-icon"
+                                (click)="onRemoveCommentClicked(comment)">
                         </div>
                         <div class="comment-text">
                             {{ comment.text }}
+
                         </div>
                     }
                 </div>
@@ -244,6 +250,32 @@
                     type="button"
                     (click)="onCancelClicked()">
                     Close
+                </button>
+            </div>
+          }
+
+          @if (popupState === 5) {
+            <div class="popup-title">
+                Remove your comment:
+            </div>
+            <div class="popup-message">
+                Do you really want to delete this comment?
+            </div>
+            <div class="popup-message">
+                <i> {{ selectedComment?.text }} </i>
+            </div> 
+            <div class="action-buttons">
+                <button 
+                    class="primary-button"
+                    type="button"
+                    (click)="removeComment()">
+                    Delete
+                </button>
+                <button 
+                    class="secondary-button"
+                    type="button"
+                    (click)="onKeepClicked()">
+                    Keep
                 </button>
             </div>
           }

@@ -262,7 +262,7 @@
     }
 
     .comment-header {
-        margin-top: 8px;
+        margin-top: 12px;
         color: darkcyan;
     }
 
@@ -287,6 +287,17 @@
     .comment-send {
         padding: 6px;
         
+        &:hover {
+            background-color: cyan;
+            cursor: pointer;
+        }
+    }
+
+    .remove-comment-icon {
+        margin-bottom: -8px;
+        margin-left: 16px;
+        padding: 2px;
+
         &:hover {
             background-color: cyan;
             cursor: pointer;
