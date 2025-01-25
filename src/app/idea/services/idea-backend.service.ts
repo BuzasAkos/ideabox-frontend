@@ -50,11 +50,20 @@ export class IdeaBackendService {
     return this.http.patch<Idea>(url, null);
   }
 
+  addComment( id: string, payload: {text: string} ): Observable<Idea> {
+    const url = `${this.baseUrl}/idea/${id}/comment`;
+    return this.http.post<Idea>(url, payload);
+  }
+
+  removeComment( id: string, commentId: string ): Observable<Idea> {
+    const url = `${this.baseUrl}/idea/${id}/comment/${commentId}`;
+    return this.http.delete<Idea>(url);
+  }
+
   getFavouriteIdeas(): Observable<{ideas: Idea[]}> {
     const url = `${this.baseUrl}/ideas/favourite`;
     return this.http.get<{ideas: Idea[]}>(url);
   }
   
-
 
 }

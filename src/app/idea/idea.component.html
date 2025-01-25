@@ -30,16 +30,15 @@
                 {{ idea.description }}
             </div>
             <div class="idea-footer">
-                <span>
-                    {{ idea.voteCount }} votes
-                </span>
-                <span>
-                    {{ idea.comments.length }} comments
+                <span
+                    class="details-button"
+                    (click)="onDetailsClicked(idea)">
+                    {{ idea.voteCount }} {{ idea.voteCount > 1 ? 'votes' : 'vote' }}
                 </span>
                 <span
                     class="details-button"
                     (click)="onDetailsClicked(idea)">
-                    {{ 'show details' }}
+                    {{ idea.comments.length }} {{ idea.comments.length > 1 ? 'comments' : 'comment' }}
                 </span>
             </div>
             <div class="idea-buttons">
@@ -53,7 +52,8 @@
                     (click)="unvote(idea._id)">
                     Unvote
                 </button>
-                <button class="idea-button">
+                <button class="idea-button"
+                    (click)="onDetailsClicked(idea)">
                     Comment
                 </button>
                 <img 
@@ -203,11 +203,24 @@
                 <div class="idea-desc">
                     {{ selectedIdea.description }}
                 </div>
-                <div class="comments-container" *ngIf="selectedIdea.comments.length">
+                <div class="comments-container">
                     <div class="comments-title">
                         Comments:
                     </div>
-                    @for (comment of selectedIdea.comments; track $index) {
+                    <form [formGroup]="commentForm" (ngSubmit)="onSendComment()">
+                      <div class="comment-input-row">
+                        <input 
+                            type="text" 
+                            class="comment-input"
+                            formControlName="text"
+                            placeholder="Add your comment">
+                        <img src="../../assets/send-icon.svg" height="24" alt="Send" 
+                            class="comment-send"
+                            *ngIf="commentForm.valid"
+                            (click)="onSendComment()">
+                      </div>
+                    </form>
+                    @for (comment of selectedIdea.comments.reverse(); track $index) {
                         <div class="comment-header">
                             {{ comment.createdBy }} wrote on {{ comment.createdAt | date : "dd MMM, hh:mm" }}:
                         </div>

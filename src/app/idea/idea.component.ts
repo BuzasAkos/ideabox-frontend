@@ -25,6 +25,7 @@ export class IdeaComponent implements OnInit, OnDestroy {
   popupState: number = 0;
   isLoading: boolean = false;
   newIdeaForm!: FormGroup;
+  commentForm!: FormGroup;
   selectedIdea?: Idea;
 
   constructor(
@@ -42,6 +43,9 @@ export class IdeaComponent implements OnInit, OnDestroy {
     this.newIdeaForm = this.formBuilder.group({
       title: ["", [Validators.required, Validators.minLength(4), Validators.maxLength(40)]],
       description: ["", [Validators.maxLength(200)]],
+    });
+    this.commentForm = this.formBuilder.group({
+      text: ["", [Validators.required, Validators.maxLength(200)]],
     });
   }
 
@@ -168,7 +172,27 @@ export class IdeaComponent implements OnInit, OnDestroy {
 
   onDetailsClicked(idea: Idea) {
     this.selectedIdea = idea;
+    this.commentForm.reset();
     this.popupState = 4;
+  }
+
+  onSendComment() {
+    if (this.commentForm.invalid || !this.selectedIdea) return;
+    const text = this.commentForm.value.text;
+    this.isLoading = true;
+    this.ideaBackendService.addComment(this.selectedIdea._id, { text }).subscribe({
+      next: (response) => {
+        this.selectedIdea = response;
+        this.commentForm.reset();
+        if (this.tabState === 0) this.loadAllIdeas();
+        if (this.tabState === 1) this.loadFavouriteIdeas();
+        this.isLoading = false;
+      },
+      error: (err) => {
+        console.log(err);
+        this.isLoading = false;
+      }
+    });
   }
 
   onCancelClicked() {

@@ -107,10 +107,10 @@
     }
 
     .details-button {
-        text-decoration: underline;
 
         &:hover {
             cursor: pointer;
+            text-decoration: underline;
             color: #e20074;
         }
     }
@@ -171,6 +171,8 @@
         min-width: 300px;
         max-width: 450px;
         min-height: 80px;
+        max-height: 600px;
+        overflow-y: auto;
         margin: 6px;
         border-radius: 10px;
         border: 1px solid gray;
@@ -249,6 +251,9 @@
 .comments-container {
     margin-top: 16px;
     padding-left: 16px;
+    min-width: 320px;
+    max-height: 300px;
+    overflow-y: auto;
     font-size: 16px;
 
     .comments-title {
@@ -263,6 +268,29 @@
 
     .comment-text {
         color: darkslategray;
+    }
+
+    .comment-input-row {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
+        margin-top: 8px;
+    }
+
+    .comment-input {
+        height: 24px;
+        width: 240px;
+        padding: 4px;
+    }
+
+    .comment-send {
+        padding: 6px;
+        
+        &:hover {
+            background-color: cyan;
+            cursor: pointer;
+        }
     }
 }
 
