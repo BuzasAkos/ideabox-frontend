@@ -221,9 +221,10 @@ export class IdeaComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.ideaBackendService.removeComment(this.selectedIdea._id, this.selectedComment.id).subscribe({
       next: (response) => {
+        const index = this.selectedIdea!.comments.findIndex(i => i.id === this.selectedComment!.id);
+        this.selectedIdea?.comments.splice(index, 1);
         this.selectedComment = undefined;
-        this.selectedIdea = undefined;
-        this.popupState = 0;
+        this.popupState = 4;
         if (this.tabState === 0) this.loadAllIdeas();
         if (this.tabState === 1) this.loadFavouriteIdeas();
       },

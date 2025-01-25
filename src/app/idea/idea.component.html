@@ -227,6 +227,7 @@
                                 height="24px" 
                                 alt="remove comment"
                                 class="remove-comment-icon"
+                                *ngIf="comment.createdBy === ideaSignalService.user()"
                                 (click)="onRemoveCommentClicked(comment)">
                         </div>
                         <div class="comment-text">
