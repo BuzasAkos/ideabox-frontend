@@ -11,14 +11,27 @@
 <div class="action-buttons">
     <button 
         class="primary-button"
+        *ngIf="selectedItems.length == 0"
         (click)="onPostClicked()">
         Post a new idea
     </button>
+    <span class="placeholder"> </span>
+    <button 
+        class="primary-button"
+        *ngIf="selectedItems.length > 0"
+        (click)="onChStatusClicked()">
+        Change status
+    </button>
+    <img src="../../assets/erase-icon.svg" 
+        alt="clear selection" 
+        width="35"
+        *ngIf="selectedItems.length > 0"
+        (click)="clearSelection()">
 </div>
 
 <div class="idea-list">
     @for (idea of ideas; track $index) {
-        <div class="list-item">
+        <div class="list-item list-card" (click)="onDetailsClicked(idea)">
             <div class="idea-user">
                 <strong> {{ idea.createdBy }} </strong> posted on 
                 {{ idea.createdAt | date : "dd MMM, HH:mm"  }}:
@@ -31,30 +44,27 @@
             </div>
             <div class="idea-footer">
                 <span
-                    class="details-button"
-                    (click)="onDetailsClicked(idea)">
+                    class="details-button">
                     {{ idea.voteCount }} {{ idea.voteCount > 1 ? 'votes' : 'vote' }}
                 </span>
                 <span
-                    class="details-button"
-                    (click)="onDetailsClicked(idea)">
+                    class="details-button">
                     {{ idea.comments.length }} {{ idea.comments.length > 1 ? 'comments' : 'comment' }}
+                </span>
+                <span>
+                    status: <strong> {{ idea.status }} </strong>
                 </span>
             </div>
             <div class="idea-buttons">
                 <button class="idea-button" 
                     *ngIf="!votedFor(idea)"
-                    (click)="vote(idea._id)">
+                    (click)="vote(idea._id); $event.stopPropagation()">
                     Vote
                 </button>
                 <button class="idea-button button-highlight" 
                     *ngIf="votedFor(idea)"
-                    (click)="unvote(idea._id)">
+                    (click)="unvote(idea._id); $event.stopPropagation()">
                     Unvote
-                </button>
-                <button class="idea-button"
-                    (click)="onDetailsClicked(idea)">
-                    Comment
                 </button>
                 <img 
                     *ngIf="idea.createdBy === ideaSignalService.user()"
@@ -62,7 +72,7 @@
                     alt="Edit idea" 
                     height="30"
                     class="action-icon"
-                    (click)="onEditClicked(idea)"
+                    (click)="onEditClicked(idea); $event.stopPropagation()"
                 >
                 <img 
                     *ngIf="idea.createdBy === ideaSignalService.user()"
@@ -70,7 +80,14 @@
                     alt="Remove idea" 
                     height="30"
                     class="action-icon"
-                    (click)="onRemoveClicked(idea)"
+                    (click)="onRemoveClicked(idea); $event.stopPropagation()"
+                >
+                <span class="placeholder"></span>
+                <input type="checkbox"
+                    class="idea-checkbox"
+                    (click)="$event.stopPropagation()"
+                    (change)="onCheckboxChanged($event, idea._id)"
+                    [checked]="selectedItems.includes(idea._id)"
                 >
             </div>
         </div>
@@ -277,6 +294,33 @@
                     type="button"
                     (click)="onKeepClicked()">
                     Keep
+                </button>
+            </div>
+          }
+
+          @if (popupState === 6) {
+            <div class="popup-title">
+                Change status of selected items:
+            </div>
+            <div class="status-select">
+                <select name="status-dropdown" id="status-dropdown" #statusDropdown>
+                    @for (item of statusChoice; track $index) {
+                        <option value="{{ item }}"> {{ item }} </option>
+                    }
+                </select>
+            </div>
+            <div class="action-buttons">
+                <button 
+                    class="primary-button"
+                    type="button"
+                    (click)="changeStatus()">
+                    Update
+                </button>
+                <button 
+                    class="secondary-button"
+                    type="button"
+                    (click)="onCancelClicked()">
+                    Cancel
                 </button>
             </div>
           }

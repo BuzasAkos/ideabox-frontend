@@ -21,7 +21,7 @@
     flex-direction: row;
     justify-content: center;
     gap: 16px;
-    margin: 16px 16px 8px 16px;
+    margin: 24px 8px 8px 8px;
     padding-bottom: 8px;
 
     .primary-button {
@@ -79,10 +79,11 @@
     margin-top: 8px;
     gap: 8px;
     padding: 8px;
-    border: solid 1px lightgray;
-    border-radius: 8px;
+    // border: solid 1px lightgray;
+    // border-radius: 8px;
     font-size: 16px;
-    box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 1px 3px 1px;
+    // box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 1px 3px 1px;
+
 
     .idea-user {
         color: darkcyan;
@@ -124,10 +125,23 @@
 
 }
 
+.list-card {
+    border: solid 1px lightgray;
+    border-radius: 8px;
+    box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 1px 3px 1px;
+
+    &:hover {
+        cursor: pointer;
+        border: #e20074 1px solid;
+    }
+
+}
+
 .idea-buttons {
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
+    width: 100%;
     margin-bottom: 8px;
     gap: 16px;
 
@@ -155,6 +169,17 @@
             background-color: lightgray;
             cursor: pointer;
         }
+    }
+
+}
+
+.idea-checkbox {
+    width: 25px;
+    accent-color: #e20074;
+
+    &:hover {
+        cursor: pointer;
+        background-color: cyan;
     }
 }
 
@@ -317,6 +342,24 @@
     font-size: 16px;
     font-weight: 600;
     color: darkcyan;
+}
+
+.status-select {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+
+    #status-dropdown {
+        width: 200px;
+        padding: 4px;
+        font-size: 16px;
+    }
+}
+
+.placeholder {
+    flex: 1;
 }
 
 

@@ -64,6 +64,11 @@ export class IdeaBackendService {
     const url = `${this.baseUrl}/ideas/favourite`;
     return this.http.get<{ideas: Idea[]}>(url);
   }
-  
+
+  statusUpdate(ideaIds: string[], status: string): Observable<{message: string}> {
+    const url = `${this.baseUrl}/ideas/status`;
+    const payload = { ideaIds, status }
+    return this.http.patch<{message: string}>(url, payload);
+  }
 
 }

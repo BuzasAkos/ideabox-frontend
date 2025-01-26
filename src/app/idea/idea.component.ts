@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { IdeaBackendService } from './services/idea-backend.service';
 import { IdeaSignalService } from './services/idea-signal.service';
 import { Idea, Comment } from './models/idea.entity';
@@ -28,6 +28,15 @@ export class IdeaComponent implements OnInit, OnDestroy {
   commentForm!: FormGroup;
   selectedIdea?: Idea;
   selectedComment?: Comment;
+  selectedItems: string[] = [];
+  statusChoice: string[] = [
+    'new',
+    'shortlist',
+    'selected',
+    'rejected'
+  ]
+
+  @ViewChild('statusDropdown') statusDropdown?: ElementRef;
 
   constructor(
     private ideaBackendService: IdeaBackendService,
@@ -36,8 +45,8 @@ export class IdeaComponent implements OnInit, OnDestroy {
   ) {}
   
   ngOnInit(): void {
-    this.initForms()
-    this.loadAllIdeas()
+    this.initForms();
+    this.loadList();
   }
 
   // initializes forms with validators and default values
@@ -49,6 +58,12 @@ export class IdeaComponent implements OnInit, OnDestroy {
     this.commentForm = this.formBuilder.group({
       text: ["", [Validators.required, Validators.maxLength(200)]],
     });
+  }
+
+  // refreshes the list of ideas depending on the active tab
+  loadList() {
+    if (this.tabState === 0) this.loadAllIdeas();
+    if (this.tabState === 1) this.loadFavouriteIdeas();
   }
 
   // load full list of ideas
@@ -92,8 +107,8 @@ export class IdeaComponent implements OnInit, OnDestroy {
 
   // switches to a selected tab (idea list)
   changeTab(index: number) {
-    if (index === 0) this.loadAllIdeas();
-    if (index === 1) this.loadFavouriteIdeas();
+    this.tabState = index;
+    this.loadList();
   }
 
   // handled click on Post new idea button
@@ -114,8 +129,7 @@ export class IdeaComponent implements OnInit, OnDestroy {
     }
     this.ideaBackendService.createIdea(idea).subscribe({
       next: (response) => {
-        if (this.tabState === 0) this.loadAllIdeas();
-        if (this.tabState === 1) this.loadFavouriteIdeas();
+        this.loadList();
       },
       error: (err) => {
         console.log(err);
@@ -147,8 +161,7 @@ export class IdeaComponent implements OnInit, OnDestroy {
     this.ideaBackendService.updateIdea(this.selectedIdea._id, idea).subscribe({
       next: (response) => {
         this.selectedIdea = undefined;
-        if (this.tabState === 0) this.loadAllIdeas();
-        if (this.tabState === 1) this.loadFavouriteIdeas();
+        this.loadList();
       },
       error: (err) => {
         console.log(err);
@@ -171,8 +184,7 @@ export class IdeaComponent implements OnInit, OnDestroy {
     this.ideaBackendService.removeIdea(this.selectedIdea._id).subscribe({
       next: (response) => {
         this.selectedIdea = undefined;
-        if (this.tabState === 0) this.loadAllIdeas();
-        if (this.tabState === 1) this.loadFavouriteIdeas();
+        this.loadList();
       },
       error: (err) => {
         console.log(err);
@@ -197,8 +209,7 @@ export class IdeaComponent implements OnInit, OnDestroy {
       next: (response) => {
         this.selectedIdea = response;
         this.commentForm.reset();
-        if (this.tabState === 0) this.loadAllIdeas();
-        if (this.tabState === 1) this.loadFavouriteIdeas();
+        this.loadList();
         this.isLoading = false;
       },
       error: (err) => {
@@ -225,8 +236,7 @@ export class IdeaComponent implements OnInit, OnDestroy {
         this.selectedIdea?.comments.splice(index, 1);
         this.selectedComment = undefined;
         this.popupState = 4;
-        if (this.tabState === 0) this.loadAllIdeas();
-        if (this.tabState === 1) this.loadFavouriteIdeas();
+        this.loadList();
       },
       error: (err) => {
         console.log(err);
@@ -244,6 +254,40 @@ export class IdeaComponent implements OnInit, OnDestroy {
   onKeepClicked() {
     this.selectedComment = undefined;
     this.popupState = 4;
+  }
+
+  onCheckboxChanged(event: Event, id: string) {
+    const isChecked = (event.target as HTMLInputElement).checked;
+    if (isChecked) {
+      this.selectedItems.push(id);
+    } else {
+      this.selectedItems = this.selectedItems.filter(i => i !== id);
+    }
+  }
+
+  clearSelection() {
+    this.selectedItems = []
+  }
+
+  onChStatusClicked() {
+    this.popupState = 6;
+  }
+
+  changeStatus() {
+    this.isLoading = true;
+    const status = this.statusDropdown?.nativeElement.value;
+    if (!status) return;
+    this.ideaBackendService.statusUpdate(this.selectedItems, status).subscribe({
+      next: (response) => {
+        this.selectedItems = []
+        this.popupState = 0;
+        this.loadList();
+      },
+      error: (err) => {
+        console.log(err);
+        this.isLoading = false;
+      }
+    })
   }
 
   // submits a vote for an idea and saves to the database
