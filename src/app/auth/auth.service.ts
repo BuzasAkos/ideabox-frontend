@@ -66,6 +66,13 @@ export class AuthService {
     }
   }
 
+  // logs out user
+  logout() {
+    this.jwt.set(null);
+    this.user.set(null);
+    localStorage.removeItem('ideaBox_token');
+  }
+
   // Decode JWT and set user signal
   setUserFromToken(token: string | null): void {
     if (!token) {

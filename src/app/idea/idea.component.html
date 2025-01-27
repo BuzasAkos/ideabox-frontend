@@ -7,7 +7,10 @@
         </span>
     }
     <span class="placeholder"></span>
-    <span class="log-info"> logged in as {{ authService.user() }} </span>
+    <span class="log-info" 
+        *ngIf="authService.user()"> 
+        logged in as {{ authService.user() }} 
+    </span>
 </div>
 
 <div class="action-buttons">
