@@ -6,6 +6,8 @@
             {{ tabs[$index] }}
         </span>
     }
+    <span class="placeholder"></span>
+    <span class="log-info"> logged in as {{ authService.user() }} </span>
 </div>
 
 <div class="action-buttons">
@@ -239,7 +241,7 @@
                     </form>
                     @for (comment of selectedIdea.comments; track $index) {
                         <div class="comment-header">
-                            {{ comment.createdBy }} wrote on {{ comment.createdAt | date : "dd MMM, hh:mm" }}:
+                            {{ comment.createdBy }} wrote on {{ comment.createdAt | date : "dd MMM, HH:mm" }}:
                             <img src="../../assets/remove-icon.svg" 
                                 height="24px" 
                                 alt="remove comment"

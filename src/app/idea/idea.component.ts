@@ -6,6 +6,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CreateIdeaDto } from './models/create-idea.dto';
 import { UpdateIdeaDto } from './models/update-idea.dto';
+import { AuthService } from '../auth/auth.service';
 
 @Component({
   selector: 'app-idea',
@@ -41,6 +42,7 @@ export class IdeaComponent implements OnInit, OnDestroy {
   constructor(
     private ideaBackendService: IdeaBackendService,
     protected ideaSignalService: IdeaSignalService,
+    protected authService: AuthService,
     private formBuilder: FormBuilder,
   ) {}
   
@@ -73,7 +75,6 @@ export class IdeaComponent implements OnInit, OnDestroy {
     this.ideaBackendService.getAllIdeas().subscribe({
       next: (response) => {
         this.ideas = response.ideas;
-        console.log(this.ideas);
         this.isLoading = false;
       },
       error: (err) => {
@@ -90,7 +91,6 @@ export class IdeaComponent implements OnInit, OnDestroy {
     this.ideaBackendService.getFavouriteIdeas().subscribe({
       next: (response) => {
         this.ideas = response.ideas;
-        console.log(this.ideas);
         this.isLoading = false;
       },
       error: (err) => {
@@ -195,6 +195,7 @@ export class IdeaComponent implements OnInit, OnDestroy {
 
   // handles click on comments button or on vote/comment counter
   onDetailsClicked(idea: Idea) {
+    idea.comments.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     this.selectedIdea = idea;
     this.commentForm.reset();
     this.popupState = 4;
