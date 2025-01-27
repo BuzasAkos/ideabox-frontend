@@ -11,6 +11,11 @@
         *ngIf="authService.user()"> 
         logged in as {{ authService.user() }} 
     </span>
+    <img src="../../assets/logout-icon.svg" alt=""
+        height="20"
+        *ngIf="authService.user()"
+        class="logout-icon"
+        (click)="logoutClicked()">
 </div>
 
 <div class="action-buttons">
@@ -72,7 +77,7 @@
                     Unvote
                 </button>
                 <img 
-                    *ngIf="idea.createdBy === ideaSignalService.user()"
+                    *ngIf="idea.createdBy === authService.user()"
                     src="../../assets/edit-icon.svg" 
                     alt="Edit idea" 
                     height="30"
@@ -80,7 +85,7 @@
                     (click)="onEditClicked(idea); $event.stopPropagation()"
                 >
                 <img 
-                    *ngIf="idea.createdBy === ideaSignalService.user()"
+                    *ngIf="idea.createdBy === authService.user()"
                     src="../../assets/remove-icon.svg" 
                     alt="Remove idea" 
                     height="30"
@@ -249,7 +254,7 @@
                                 height="24px" 
                                 alt="remove comment"
                                 class="remove-comment-icon"
-                                *ngIf="comment.createdBy === ideaSignalService.user()"
+                                *ngIf="comment.createdBy === authService.user()"
                                 (click)="onRemoveCommentClicked(comment)">
                         </div>
                         <div class="comment-text">
@@ -263,7 +268,7 @@
                 {{ selectedIdea?.voteCount }} vote(s)
                 <span *ngIf="(selectedIdea?.voteCount || 0) > 0">
                     by @for (vote of selectedIdea?.votes; track $index) {
-                        {{ vote.createdBy }}
+                        {{ vote.createdBy + ($index + 1 === selectedIdea?.votes?.length ? '' : ', ') }}
                     }
                 </span>
             </div>

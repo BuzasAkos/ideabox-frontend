@@ -5,7 +5,6 @@ import { Injectable, signal } from '@angular/core';
 })
 export class IdeaSignalService {
 
-  user = signal<string>('Ákos');
 
   constructor() { }
 }

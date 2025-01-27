@@ -1,0 +1,21 @@
+<div class="login-title">
+    Enter your (nick)name:
+</div>
+
+<form [formGroup]="loginForm" (ngSubmit)="submitLogin()">
+    <div class="login-form-container">
+        <input 
+            type="text"
+            class="login-input"
+            formControlName="name"
+        >
+        <button 
+            type="submit"
+            class="login-button"
+            [disabled]="loginForm.invalid"
+        >
+            Login
+        </button>
+    </div>
+</form>
+

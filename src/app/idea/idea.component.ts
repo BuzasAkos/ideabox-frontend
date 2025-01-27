@@ -7,6 +7,7 @@ import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } 
 import { CreateIdeaDto } from './models/create-idea.dto';
 import { UpdateIdeaDto } from './models/update-idea.dto';
 import { AuthService } from '../auth/auth.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-idea',
@@ -44,6 +45,7 @@ export class IdeaComponent implements OnInit, OnDestroy {
     protected ideaSignalService: IdeaSignalService,
     protected authService: AuthService,
     private formBuilder: FormBuilder,
+    private router: Router,
   ) {}
   
   ngOnInit(): void {
@@ -102,7 +104,7 @@ export class IdeaComponent implements OnInit, OnDestroy {
 
   // checks if the current user has voted for this idea
   votedFor(idea: Idea) {
-    return !!idea.votes.find(i => i.createdBy === this.ideaSignalService.user());
+    return !!idea.votes.find(i => i.createdBy === this.authService.user());
   }
 
   // switches to a selected tab (idea list)
@@ -208,6 +210,7 @@ export class IdeaComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.ideaBackendService.addComment(this.selectedIdea._id, { text }).subscribe({
       next: (response) => {
+        response.comments.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         this.selectedIdea = response;
         this.commentForm.reset();
         this.loadList();
@@ -318,6 +321,10 @@ export class IdeaComponent implements OnInit, OnDestroy {
         console.log(err);
       }
     })
+  }
+
+  logoutClicked() {
+    this.router.navigateByUrl('login');
   }
 
   ngOnDestroy(): void {
