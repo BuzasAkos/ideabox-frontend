@@ -260,6 +260,7 @@ export class IdeaComponent implements OnInit, OnDestroy {
     this.popupState = 4;
   }
 
+  // modifies selectedItems on change of a checkbox state
   onCheckboxChanged(event: Event, id: string) {
     const isChecked = (event.target as HTMLInputElement).checked;
     if (isChecked) {
@@ -269,14 +270,17 @@ export class IdeaComponent implements OnInit, OnDestroy {
     }
   }
 
+  // clears all items from the selection
   clearSelection() {
     this.selectedItems = []
   }
 
+  // opens popup to change status for selected items
   onChStatusClicked() {
     this.popupState = 6;
   }
 
+  // changes status in the database for selected items
   changeStatus() {
     this.isLoading = true;
     const status = this.statusDropdown?.nativeElement.value;
@@ -323,6 +327,7 @@ export class IdeaComponent implements OnInit, OnDestroy {
     })
   }
 
+  // navigates to login screen where ideaBox_user is reset
   logoutClicked() {
     this.router.navigateByUrl('login');
   }
