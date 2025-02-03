@@ -236,6 +236,15 @@
         color: darkslategray;
     }
 
+    .error-message {
+        width: 100%;
+        text-align: center;
+        margin-bottom: 16px;
+        font-size: 16px;
+        font-weight: 600;
+        color: red;
+    }
+
     .button-row {
         display: flex;
         flex-direction: row;

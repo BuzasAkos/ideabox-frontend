@@ -37,6 +37,7 @@ export class IdeaComponent implements OnInit, OnDestroy {
     'selected',
     'rejected'
   ]
+  errorMessage?: string = undefined;
 
   @ViewChild('statusDropdown') statusDropdown?: ElementRef;
 
@@ -136,6 +137,7 @@ export class IdeaComponent implements OnInit, OnDestroy {
       error: (err) => {
         console.log(err);
         this.isLoading = false;
+        this.displayError(err.error.message);
       }
     })
   }
@@ -168,6 +170,7 @@ export class IdeaComponent implements OnInit, OnDestroy {
       error: (err) => {
         console.log(err);
         this.isLoading = false;
+        this.displayError(err.error.message);
       }
     })
   }
@@ -191,16 +194,26 @@ export class IdeaComponent implements OnInit, OnDestroy {
       error: (err) => {
         console.log(err);
         this.isLoading = false;
+        this.displayError(err.error.message);
       }
     })
   }
 
   // handles click on comments button or on vote/comment counter
-  onDetailsClicked(idea: Idea) {
-    idea.comments.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    this.selectedIdea = idea;
-    this.commentForm.reset();
-    this.popupState = 4;
+  onDetailsClicked(ideaId: string) {
+    this.ideaBackendService.getIdea(ideaId).subscribe({
+      next: (response) => {
+        const idea = response;
+        idea.comments.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        this.selectedIdea = idea;
+        this.commentForm.reset();
+        this.popupState = 4;
+      },
+      error: (err) => {
+        console.log(err);
+        this.displayError(err.error.message);
+      }
+    })
   }
 
   // saves a new comment for the selected idea to database
@@ -219,6 +232,7 @@ export class IdeaComponent implements OnInit, OnDestroy {
       error: (err) => {
         console.log(err);
         this.isLoading = false;
+        this.displayError(err.error.message);
       }
     });
   }
@@ -245,6 +259,7 @@ export class IdeaComponent implements OnInit, OnDestroy {
       error: (err) => {
         console.log(err);
         this.isLoading = false;
+        this.displayError(err.error.message);
       }
     })
   }
@@ -294,6 +309,7 @@ export class IdeaComponent implements OnInit, OnDestroy {
       error: (err) => {
         console.log(err);
         this.isLoading = false;
+        this.displayError(err.error.message);
       }
     })
   }
@@ -307,6 +323,7 @@ export class IdeaComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.log(err);
+        this.displayError(err.error.message);
       }
     })
   }
@@ -323,8 +340,15 @@ export class IdeaComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.log(err);
+        this.displayError(err.error.message);
       }
     })
+  }
+
+  // displays the error message in a popup
+  displayError(msg: string) {
+    this.errorMessage = msg;
+    this.popupState = 99;
   }
 
   // navigates to login screen where ideaBox_user is reset

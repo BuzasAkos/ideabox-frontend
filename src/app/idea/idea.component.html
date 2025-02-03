@@ -41,7 +41,7 @@
 
 <div class="idea-list">
     @for (idea of ideas; track $index) {
-        <div class="list-item list-card" (click)="onDetailsClicked(idea)">
+        <div class="list-item list-card" (click)="onDetailsClicked(idea._id)">
             <div class="idea-user">
                 <strong> {{ idea.createdBy }} </strong> posted on 
                 {{ idea.createdAt | date : "dd MMM, HH:mm"  }}:
@@ -331,6 +331,23 @@
                     type="button"
                     (click)="onCancelClicked()">
                     Cancel
+                </button>
+            </div>
+          }
+
+          @if (popupState === 99) {
+            <div class="popup-title">
+                An error occured:
+            </div>
+            <div class="error-message">
+                {{ errorMessage }}
+            </div>
+            <div class="action-buttons">
+                <button 
+                    class="secondary-button"
+                    type="button"
+                    (click)="onCancelClicked()">
+                    OK
                 </button>
             </div>
           }

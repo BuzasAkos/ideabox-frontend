@@ -4,7 +4,7 @@ import { environment } from '../../../environments/environment';
 import { Idea } from '../models/idea.entity';
 import { CreateIdeaDto } from '../models/create-idea.dto';
 import { UpdateIdeaDto } from '../models/update-idea.dto';
-import { Observable } from 'rxjs';
+import { forkJoin, Observable, tap } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -69,6 +69,18 @@ export class IdeaBackendService {
     const url = `${this.baseUrl}/ideas/status`;
     const payload = { ideaIds, status }
     return this.http.patch<{message: string}>(url, payload);
+  }
+
+  joinTest() {
+    const url1 = `${this.baseUrl}/ideas`;
+    const url2 = `${this.baseUrl}/ideas/favourite`;
+    return forkJoin({
+      ideas: this.http.get<{ideas: Idea[]}>(url1),
+      favourites: this.http.get<{ideas: Idea[]}>(url2)
+    })
+    .pipe(
+      tap((response) => console.log(response))
+    )
   }
 
 }
