@@ -4,6 +4,7 @@ import { environment } from '../../../environments/environment';
 import { Idea } from '../models/idea.entity';
 import { CreateIdeaDto } from '../models/create-idea.dto';
 import { UpdateIdeaDto } from '../models/update-idea.dto';
+import { IdeaSignalService } from './idea-signal.service';
 import { forkJoin, Observable, tap } from 'rxjs';
 
 @Injectable({
@@ -13,7 +14,7 @@ export class IdeaBackendService {
 
   baseUrl: string = `${environment.backend_url}/ideabox`;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private ideaSignalService: IdeaSignalService) { }
 
   createIdea( payload: CreateIdeaDto): Observable<Idea> {
     const url = `${this.baseUrl}/idea`;
@@ -22,7 +23,9 @@ export class IdeaBackendService {
 
   getAllIdeas(): Observable<{ideas: Idea[]}> {
     const url = `${this.baseUrl}/ideas`;
-    return this.http.get<{ideas: Idea[]}>(url);
+    return this.http.get<{ideas: Idea[]}>(url).pipe(
+      tap((response) => this.ideaSignalService.ideas.set(response.ideas))
+    );
   }
   
   getIdea( id: string ): Observable<Idea> {
@@ -62,7 +65,9 @@ export class IdeaBackendService {
 
   getFavouriteIdeas(): Observable<{ideas: Idea[]}> {
     const url = `${this.baseUrl}/ideas/favourite`;
-    return this.http.get<{ideas: Idea[]}>(url);
+    return this.http.get<{ideas: Idea[]}>(url).pipe(
+      tap((response) => this.ideaSignalService.ideas.set(response.ideas))
+    );
   }
 
   statusUpdate(ideaIds: string[], status: string): Observable<{message: string}> {
@@ -71,6 +76,7 @@ export class IdeaBackendService {
     return this.http.patch<{message: string}>(url, payload);
   }
 
+  // test
   joinTest() {
     const url1 = `${this.baseUrl}/ideas`;
     const url2 = `${this.baseUrl}/ideas/favourite`;

@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, signal, ViewChild } from '@angular/core';
 import { IdeaBackendService } from './services/idea-backend.service';
 import { IdeaSignalService } from './services/idea-signal.service';
 import { Idea, Comment } from './models/idea.entity';
@@ -18,26 +18,26 @@ import { Router } from '@angular/router';
 })
 export class IdeaComponent implements OnInit, OnDestroy {
 
-  ideas: Idea[] = [];
   tabs: string[] = [
     'All Ideas',
     'Favourite Ideas'
   ]
-  tabState: number = 0;
-  popupState: number = 0;
-  isLoading: boolean = false;
-  newIdeaForm!: FormGroup;
-  commentForm!: FormGroup;
-  selectedIdea?: Idea;
-  selectedComment?: Comment;
-  selectedItems: string[] = [];
   statusChoice: string[] = [
     'new',
     'shortlist',
     'selected',
     'rejected'
   ]
-  errorMessage?: string = undefined;
+  newIdeaForm!: FormGroup;
+  commentForm!: FormGroup;
+  selectedIdea?: Idea;
+  selectedComment?: Comment;
+  selectedItems: string[] = [];
+  
+  isLoading = signal<boolean>(false);
+  popupState = signal<number>(0);
+  tabState = signal<number>(0);
+  errorMessage = signal<string | undefined>(undefined);
 
   @ViewChild('statusDropdown') statusDropdown?: ElementRef;
 
@@ -67,50 +67,45 @@ export class IdeaComponent implements OnInit, OnDestroy {
 
   // refreshes the list of ideas depending on the active tab
   loadList() {
-    if (this.tabState === 0) this.loadAllIdeas();
-    if (this.tabState === 1) this.loadFavouriteIdeas();
+    if (this.tabState() === 0) this.loadAllIdeas();
+    if (this.tabState() === 1) this.loadFavouriteIdeas();
   }
 
   // load full list of ideas
   loadAllIdeas() {
-    this.tabState = 0;
-    this.isLoading = true;
+    this.tabState.set(0);
+    this.isLoading.set(true);
     this.ideaBackendService.getAllIdeas().subscribe({
-      next: (response) => {
-        this.ideas = response.ideas;
-        this.isLoading = false;
+      next: () => {
+        this.isLoading.set(false);
       },
       error: (err) => {
         console.log(err);
-        this.isLoading = false;
+        this.displayError(err.error.message);
+        this.isLoading.set(false);
       }
     });
   }
 
   // load list of ideas that the user has voted for
   loadFavouriteIdeas() {
-    this.tabState = 1;
-    this.isLoading = true;
+    this.tabState.set(1);
+    this.isLoading.set(true);
     this.ideaBackendService.getFavouriteIdeas().subscribe({
-      next: (response) => {
-        this.ideas = response.ideas;
-        this.isLoading = false;
+      next: () => {
+        this.isLoading.set(false);
       },
       error: (err) => {
         console.log(err);
-        this.isLoading = false;
+        this.displayError(err.error.message);
+        this.isLoading.set(false);
       }
     });
   }
 
-  // checks if the current user has voted for this idea
-  votedFor(idea: Idea) {
-    return !!idea.votes.find(i => i.createdBy === this.authService.user());
-  }
-
   // switches to a selected tab (idea list)
   changeTab(index: number) {
-    this.tabState = index;
+    this.tabState.set(index);
     this.loadList();
   }
 
@@ -118,25 +113,25 @@ export class IdeaComponent implements OnInit, OnDestroy {
   onPostClicked() {
     this.newIdeaForm.reset();
     this.newIdeaForm.enable();
-    this.popupState = 1;
+    this.popupState.set(1);
   }
 
   // saves a new idea in the database
   onSaveNewIdea() {
     if (this.newIdeaForm.invalid) return;
-    this.popupState = 0;
-    this.isLoading = true;
+    this.popupState.set(0);
+    this.isLoading.set(true);
     const idea: CreateIdeaDto = {
       title: this.newIdeaForm.value.title,
       description: this.newIdeaForm.value.description,
     }
     this.ideaBackendService.createIdea(idea).subscribe({
-      next: (response) => {
+      next: () => {
         this.loadList();
       },
       error: (err) => {
         console.log(err);
-        this.isLoading = false;
+        this.isLoading.set(false);
         this.displayError(err.error.message);
       }
     })
@@ -151,25 +146,25 @@ export class IdeaComponent implements OnInit, OnDestroy {
     });
     this.selectedIdea = idea;
     this.newIdeaForm.get('title')?.disable();
-    this.popupState = 2;
+    this.popupState.set(2);
   }
 
   // saves the updated idea in the database
   onSaveEditedIdea() {
     if (this.newIdeaForm.invalid || !this.selectedIdea) return;
-    this.popupState = 0;
-    this.isLoading = true;
+    this.popupState.set(0);
+    this.isLoading.set(true);
     const idea: UpdateIdeaDto = {
       description: this.newIdeaForm.value.description,
     }
     this.ideaBackendService.updateIdea(this.selectedIdea._id, idea).subscribe({
-      next: (response) => {
+      next: () => {
         this.selectedIdea = undefined;
         this.loadList();
       },
       error: (err) => {
         console.log(err);
-        this.isLoading = false;
+        this.isLoading.set(false);
         this.displayError(err.error.message);
       }
     })
@@ -178,22 +173,22 @@ export class IdeaComponent implements OnInit, OnDestroy {
   // handles click on remove icon for an idea
   onRemoveClicked(idea: Idea) {
     this.selectedIdea = idea;
-    this.popupState = 3;
+    this.popupState.set(3);
   }
 
   // removes an idea from the database
   removeIdea() {
     if (!this.selectedIdea) return;
-    this.popupState = 0;
-    this.isLoading = true;
+    this.popupState.set(0);
+    this.isLoading.set(true);
     this.ideaBackendService.removeIdea(this.selectedIdea._id).subscribe({
-      next: (response) => {
+      next: () => {
         this.selectedIdea = undefined;
         this.loadList();
       },
       error: (err) => {
         console.log(err);
-        this.isLoading = false;
+        this.isLoading.set(false);
         this.displayError(err.error.message);
       }
     })
@@ -207,7 +202,7 @@ export class IdeaComponent implements OnInit, OnDestroy {
         idea.comments.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         this.selectedIdea = idea;
         this.commentForm.reset();
-        this.popupState = 4;
+        this.popupState.set(4);
       },
       error: (err) => {
         console.log(err);
@@ -220,18 +215,18 @@ export class IdeaComponent implements OnInit, OnDestroy {
   onSendComment() {
     if (this.commentForm.invalid || !this.selectedIdea) return;
     const text = this.commentForm.value.text;
-    this.isLoading = true;
+    this.isLoading.set(true);
     this.ideaBackendService.addComment(this.selectedIdea._id, { text }).subscribe({
       next: (response) => {
         response.comments.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         this.selectedIdea = response;
         this.commentForm.reset();
         this.loadList();
-        this.isLoading = false;
+        this.isLoading.set(false);
       },
       error: (err) => {
         console.log(err);
-        this.isLoading = false;
+        this.isLoading.set(false);
         this.displayError(err.error.message);
       }
     });
@@ -241,24 +236,24 @@ export class IdeaComponent implements OnInit, OnDestroy {
   onRemoveCommentClicked(comment: Comment) {
     console.log(comment);
     this.selectedComment = comment;
-    this.popupState = 5;
+    this.popupState.set(5);
   }
 
   // removes a comment from the database
   removeComment() {
     if (!this.selectedComment || !this.selectedIdea) return;
-    this.isLoading = true;
+    this.isLoading.set(true);
     this.ideaBackendService.removeComment(this.selectedIdea._id, this.selectedComment.id).subscribe({
       next: (response) => {
         const index = this.selectedIdea!.comments.findIndex(i => i.id === this.selectedComment!.id);
         this.selectedIdea?.comments.splice(index, 1);
         this.selectedComment = undefined;
-        this.popupState = 4;
+        this.popupState.set(4);
         this.loadList();
       },
       error: (err) => {
         console.log(err);
-        this.isLoading = false;
+        this.isLoading.set(false);
         this.displayError(err.error.message);
       }
     })
@@ -266,13 +261,13 @@ export class IdeaComponent implements OnInit, OnDestroy {
 
   // handles cancel button in a popup: closes the window
   onCancelClicked() {
-    this.popupState = 0;
+    this.popupState.set(0);
   }
 
   // handles keep button in a popup: returns to the details window
   onKeepClicked() {
     this.selectedComment = undefined;
-    this.popupState = 4;
+    this.popupState.set(4);
   }
 
   // modifies selectedItems on change of a checkbox state
@@ -292,23 +287,23 @@ export class IdeaComponent implements OnInit, OnDestroy {
 
   // opens popup to change status for selected items
   onChStatusClicked() {
-    this.popupState = 6;
+    this.popupState.set(6);
   }
 
   // changes status in the database for selected items
   changeStatus() {
-    this.isLoading = true;
+    this.isLoading.set(true);
     const status = this.statusDropdown?.nativeElement.value;
     if (!status) return;
     this.ideaBackendService.statusUpdate(this.selectedItems, status).subscribe({
-      next: (response) => {
+      next: () => {
         this.selectedItems = []
-        this.popupState = 0;
+        this.popupState.set(0);
         this.loadList();
       },
       error: (err) => {
         console.log(err);
-        this.isLoading = false;
+        this.isLoading.set(false);
         this.displayError(err.error.message);
       }
     })
@@ -317,9 +312,8 @@ export class IdeaComponent implements OnInit, OnDestroy {
   // submits a vote for an idea and saves to the database
   vote(ideaId: string) {
     this.ideaBackendService.addVote(ideaId).subscribe({
-      next: (response) => {
-        const index = this.ideas.findIndex(item => item._id === response._id);
-        if (index >= 0) this.ideas[index] = response;
+      next: () => {
+        this.loadList()
       },
       error: (err) => {
         console.log(err);
@@ -331,12 +325,8 @@ export class IdeaComponent implements OnInit, OnDestroy {
   // removes the vote of the user from a specific idea
   unvote(ideaId: string) {
     this.ideaBackendService.removeVote(ideaId).subscribe({
-      next: (response) => {
-        if (this.tabState === 1) {
-          return this.loadFavouriteIdeas();
-        }
-        const index = this.ideas.findIndex(item => item._id === response._id);
-        if (index >= 0) this.ideas[index] = response;
+      next: () => {
+        this.loadList();
       },
       error: (err) => {
         console.log(err);
@@ -347,8 +337,8 @@ export class IdeaComponent implements OnInit, OnDestroy {
 
   // displays the error message in a popup
   displayError(msg: string) {
-    this.errorMessage = msg;
-    this.popupState = 99;
+    this.errorMessage.set(msg);
+    this.popupState.set(99);
   }
 
   // navigates to login screen where ideaBox_user is reset

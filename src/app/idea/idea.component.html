@@ -1,7 +1,7 @@
 <div class="tabs-container">
     @for (tab of tabs; track $index) {
         <span
-            [class.tab-highlight]="tabState === $index"
+            [class.tab-highlight]="tabState() === $index"
             (click)="changeTab($index)">
             {{ tabs[$index] }}
         </span>
@@ -40,7 +40,7 @@
 </div>
 
 <div class="idea-list">
-    @for (idea of ideas; track $index) {
+    @for (idea of ideaSignalService.ideas(); track $index) {
         <div class="list-item list-card" (click)="onDetailsClicked(idea._id)">
             <div class="idea-user">
                 <strong> {{ idea.createdBy }} </strong> posted on 
@@ -67,12 +67,12 @@
             </div>
             <div class="idea-buttons">
                 <button class="idea-button" 
-                    *ngIf="!votedFor(idea)"
+                    *ngIf="!ideaSignalService.votedForIds().includes(idea._id)"
                     (click)="vote(idea._id); $event.stopPropagation()">
                     Vote
                 </button>
                 <button class="idea-button button-highlight" 
-                    *ngIf="votedFor(idea)"
+                    *ngIf="ideaSignalService.votedForIds().includes(idea._id)"
                     (click)="unvote(idea._id); $event.stopPropagation()">
                     Unvote
                 </button>
@@ -104,10 +104,10 @@
     }
 </div>
 
-@if (popupState) {
+@if (popupState() > 0) {
     <div class="popup-container">
       <div class="popup-window">
-          @if (popupState === 1) {
+          @if (popupState() === 1) {
             <div class="popup-title">
                 Post a new idea:
             </div>
@@ -148,7 +148,7 @@
             </form>
           }
 
-          @if (popupState === 2) {
+          @if (popupState() === 2) {
             <div class="popup-title">
                 Edit your idea:
             </div>
@@ -189,7 +189,7 @@
             </form>
           }
 
-          @if (popupState === 3) {
+          @if (popupState() === 3) {
             <div class="popup-title">
                 Remove your idea:
             </div>
@@ -215,7 +215,7 @@
             </div>
           }
 
-          @if (popupState === 4) {
+          @if (popupState() === 4) {
             <div class="popup-title">
                 Details:
             </div>
@@ -282,7 +282,7 @@
             </div>
           }
 
-          @if (popupState === 5) {
+          @if (popupState() === 5) {
             <div class="popup-title">
                 Remove your comment:
             </div>
@@ -308,7 +308,7 @@
             </div>
           }
 
-          @if (popupState === 6) {
+          @if (popupState() === 6) {
             <div class="popup-title">
                 Change status of selected items:
             </div>
@@ -335,12 +335,12 @@
             </div>
           }
 
-          @if (popupState === 99) {
+          @if (popupState() === 99) {
             <div class="popup-title">
                 An error occured:
             </div>
             <div class="error-message">
-                {{ errorMessage }}
+                {{ errorMessage() }}
             </div>
             <div class="action-buttons">
                 <button 
