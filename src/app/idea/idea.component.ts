@@ -1,5 +1,5 @@
 import { Component, ElementRef, OnDestroy, OnInit, signal, ViewChild } from '@angular/core';
-import { IdeaBackendService } from './services/idea-backend.service';
+import { IdeaHttpService } from './services/idea-http.service';
 import { IdeaSignalService } from './services/idea-signal.service';
 import { Idea, Comment } from './models/idea.entity';
 import { CommonModule } from '@angular/common';
@@ -8,6 +8,7 @@ import { CreateIdeaDto } from './models/create-idea.dto';
 import { UpdateIdeaDto } from './models/update-idea.dto';
 import { AuthService } from '../auth/auth.service';
 import { Router } from '@angular/router';
+import { finalize, Observable, switchMap, tap } from 'rxjs';
 
 @Component({
   selector: 'app-idea',
@@ -30,10 +31,11 @@ export class IdeaComponent implements OnInit, OnDestroy {
   ]
   newIdeaForm!: FormGroup;
   commentForm!: FormGroup;
-  selectedIdea?: Idea;
-  selectedComment?: Comment;
+  
   selectedItems: string[] = [];
   
+  selectedIdea = signal<Idea | undefined>(undefined);
+  selectedComment = signal<Comment | undefined>(undefined);
   isLoading = signal<boolean>(false);
   popupState = signal<number>(0);
   tabState = signal<number>(0);
@@ -42,7 +44,7 @@ export class IdeaComponent implements OnInit, OnDestroy {
   @ViewChild('statusDropdown') statusDropdown?: ElementRef;
 
   constructor(
-    private ideaBackendService: IdeaBackendService,
+    private ideaHttpService: IdeaHttpService,
     protected ideaSignalService: IdeaSignalService,
     protected authService: AuthService,
     private formBuilder: FormBuilder,
@@ -51,7 +53,7 @@ export class IdeaComponent implements OnInit, OnDestroy {
   
   ngOnInit(): void {
     this.initForms();
-    this.loadList();
+    this.loadIdeas();
   }
 
   // initializes forms with validators and default values
@@ -65,48 +67,36 @@ export class IdeaComponent implements OnInit, OnDestroy {
     });
   }
 
-  // refreshes the list of ideas depending on the active tab
-  loadList() {
-    if (this.tabState() === 0) this.loadAllIdeas();
-    if (this.tabState() === 1) this.loadFavouriteIdeas();
-  }
-
-  // load full list of ideas
-  loadAllIdeas() {
-    this.tabState.set(0);
+  // load list of ideas on initialization
+  loadIdeas() {
     this.isLoading.set(true);
-    this.ideaBackendService.getAllIdeas().subscribe({
-      next: () => {
-        this.isLoading.set(false);
-      },
+    this.getIdeasQuery().subscribe({
+      next: () => { },
       error: (err) => {
         console.log(err);
         this.displayError(err.error.message);
-        this.isLoading.set(false);
       }
     });
   }
 
-  // load list of ideas that the user has voted for
-  loadFavouriteIdeas() {
-    this.tabState.set(1);
-    this.isLoading.set(true);
-    this.ideaBackendService.getFavouriteIdeas().subscribe({
-      next: () => {
-        this.isLoading.set(false);
-      },
-      error: (err) => {
-        console.log(err);
-        this.displayError(err.error.message);
-        this.isLoading.set(false);
-      }
-    });
+  // returns the appropriate http request for list of ideas depending on the active tab
+  getIdeasQuery(): Observable<{ideas: Idea[]}> {
+    if (this.tabState() === 1) {
+      return this.ideaHttpService.getFavouriteIdeas().pipe(
+        tap((response) => this.ideaSignalService.ideas.set(response.ideas)),
+        finalize(() => this.isLoading.set(false))
+    )} else {
+      return this.ideaHttpService.getAllIdeas().pipe(
+        tap((response) => this.ideaSignalService.ideas.set(response.ideas)),
+        finalize(() => this.isLoading.set(false))
+      );
+    }
   }
 
-  // switches to a selected tab (idea list)
+  // switches to a selected tab (idea list) and initiates reload
   changeTab(index: number) {
     this.tabState.set(index);
-    this.loadList();
+    this.loadIdeas();
   }
 
   // handled click on Post new idea button
@@ -125,10 +115,12 @@ export class IdeaComponent implements OnInit, OnDestroy {
       title: this.newIdeaForm.value.title,
       description: this.newIdeaForm.value.description,
     }
-    this.ideaBackendService.createIdea(idea).subscribe({
-      next: () => {
-        this.loadList();
-      },
+    this.ideaHttpService.createIdea(idea)
+    .pipe(
+      switchMap(() => this.getIdeasQuery())
+    )
+    .subscribe({
+      next: () => { },
       error: (err) => {
         console.log(err);
         this.isLoading.set(false);
@@ -144,23 +136,26 @@ export class IdeaComponent implements OnInit, OnDestroy {
       title: idea.title,
       description: idea.description
     });
-    this.selectedIdea = idea;
+    this.selectedIdea.set(idea);
     this.newIdeaForm.get('title')?.disable();
     this.popupState.set(2);
   }
 
   // saves the updated idea in the database
   onSaveEditedIdea() {
-    if (this.newIdeaForm.invalid || !this.selectedIdea) return;
+    if (this.newIdeaForm.invalid || !this.selectedIdea()) return;
     this.popupState.set(0);
     this.isLoading.set(true);
     const idea: UpdateIdeaDto = {
       description: this.newIdeaForm.value.description,
     }
-    this.ideaBackendService.updateIdea(this.selectedIdea._id, idea).subscribe({
+    this.ideaHttpService.updateIdea(this.selectedIdea()!._id, idea)
+    .pipe(
+      switchMap(() => this.getIdeasQuery())
+    )
+    .subscribe({
       next: () => {
-        this.selectedIdea = undefined;
-        this.loadList();
+        this.selectedIdea.set(undefined);
       },
       error: (err) => {
         console.log(err);
@@ -172,19 +167,22 @@ export class IdeaComponent implements OnInit, OnDestroy {
 
   // handles click on remove icon for an idea
   onRemoveClicked(idea: Idea) {
-    this.selectedIdea = idea;
+    this.selectedIdea.set(idea);
     this.popupState.set(3);
   }
 
   // removes an idea from the database
   removeIdea() {
-    if (!this.selectedIdea) return;
+    if (!this.selectedIdea()) return;
     this.popupState.set(0);
     this.isLoading.set(true);
-    this.ideaBackendService.removeIdea(this.selectedIdea._id).subscribe({
+    this.ideaHttpService.removeIdea(this.selectedIdea()!._id)
+    .pipe(
+      switchMap(() => this.getIdeasQuery())
+    )
+    .subscribe({
       next: () => {
-        this.selectedIdea = undefined;
-        this.loadList();
+        this.selectedIdea.set(undefined);
       },
       error: (err) => {
         console.log(err);
@@ -196,11 +194,15 @@ export class IdeaComponent implements OnInit, OnDestroy {
 
   // handles click on comments button or on vote/comment counter
   onDetailsClicked(ideaId: string) {
-    this.ideaBackendService.getIdea(ideaId).subscribe({
-      next: (response) => {
-        const idea = response;
-        idea.comments.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        this.selectedIdea = idea;
+    this.ideaHttpService.getIdea(ideaId)
+    .pipe(
+      tap((response) => {
+        response.comments.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        this.selectedIdea.set(response);
+      })
+    )
+    .subscribe({
+      next: () => {
         this.commentForm.reset();
         this.popupState.set(4);
       },
@@ -213,16 +215,20 @@ export class IdeaComponent implements OnInit, OnDestroy {
 
   // saves a new comment for the selected idea to database
   onSendComment() {
-    if (this.commentForm.invalid || !this.selectedIdea) return;
+    if (this.commentForm.invalid || !this.selectedIdea()) return;
     const text = this.commentForm.value.text;
     this.isLoading.set(true);
-    this.ideaBackendService.addComment(this.selectedIdea._id, { text }).subscribe({
-      next: (response) => {
+    this.ideaHttpService.addComment(this.selectedIdea()!._id, { text })
+    .pipe(
+      tap( (response) => {
         response.comments.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        this.selectedIdea = response;
+        this.selectedIdea.set(response);
+      }),
+      switchMap(() => this.getIdeasQuery())
+    )
+    .subscribe({
+      next: () => {
         this.commentForm.reset();
-        this.loadList();
-        this.isLoading.set(false);
       },
       error: (err) => {
         console.log(err);
@@ -235,21 +241,27 @@ export class IdeaComponent implements OnInit, OnDestroy {
   // handles click on remove icon next to a comment for an idea
   onRemoveCommentClicked(comment: Comment) {
     console.log(comment);
-    this.selectedComment = comment;
+    this.selectedComment.set(comment);
     this.popupState.set(5);
   }
 
   // removes a comment from the database
   removeComment() {
-    if (!this.selectedComment || !this.selectedIdea) return;
+    if (!this.selectedComment() || !this.selectedIdea()) return;
     this.isLoading.set(true);
-    this.ideaBackendService.removeComment(this.selectedIdea._id, this.selectedComment.id).subscribe({
-      next: (response) => {
-        const index = this.selectedIdea!.comments.findIndex(i => i.id === this.selectedComment!.id);
-        this.selectedIdea?.comments.splice(index, 1);
-        this.selectedComment = undefined;
+    this.ideaHttpService.removeComment(this.selectedIdea()!._id, this.selectedComment()!.id)
+    .pipe(
+      tap(() => {
+        const index = this.selectedIdea()!.comments.findIndex(i => i.id === this.selectedComment()!.id);
+        this.selectedIdea()!.comments.splice(index, 1);
+        this.selectedComment.set(undefined);
+        
+      }),
+      switchMap(() => this.getIdeasQuery())
+    )
+    .subscribe({
+      next: () => {
         this.popupState.set(4);
-        this.loadList();
       },
       error: (err) => {
         console.log(err);
@@ -266,7 +278,7 @@ export class IdeaComponent implements OnInit, OnDestroy {
 
   // handles keep button in a popup: returns to the details window
   onKeepClicked() {
-    this.selectedComment = undefined;
+    this.selectedComment.set(undefined);
     this.popupState.set(4);
   }
 
@@ -295,11 +307,14 @@ export class IdeaComponent implements OnInit, OnDestroy {
     this.isLoading.set(true);
     const status = this.statusDropdown?.nativeElement.value;
     if (!status) return;
-    this.ideaBackendService.statusUpdate(this.selectedItems, status).subscribe({
+    this.ideaHttpService.statusUpdate(this.selectedItems, status)
+    .pipe(
+      switchMap(() => this.getIdeasQuery())
+    )
+    .subscribe({
       next: () => {
         this.selectedItems = []
         this.popupState.set(0);
-        this.loadList();
       },
       error: (err) => {
         console.log(err);
@@ -311,10 +326,12 @@ export class IdeaComponent implements OnInit, OnDestroy {
 
   // submits a vote for an idea and saves to the database
   vote(ideaId: string) {
-    this.ideaBackendService.addVote(ideaId).subscribe({
-      next: () => {
-        this.loadList()
-      },
+    this.ideaHttpService.addVote(ideaId)
+    .pipe(
+      switchMap(() => this.getIdeasQuery())
+    )
+    .subscribe({
+      next: () => { },
       error: (err) => {
         console.log(err);
         this.displayError(err.error.message);
@@ -324,10 +341,12 @@ export class IdeaComponent implements OnInit, OnDestroy {
 
   // removes the vote of the user from a specific idea
   unvote(ideaId: string) {
-    this.ideaBackendService.removeVote(ideaId).subscribe({
-      next: () => {
-        this.loadList();
-      },
+    this.ideaHttpService.removeVote(ideaId)
+    .pipe(
+      switchMap(() => this.getIdeasQuery())
+    )
+    .subscribe({
+      next: () => { },
       error: (err) => {
         console.log(err);
         this.displayError(err.error.message);

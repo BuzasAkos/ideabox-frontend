@@ -197,7 +197,7 @@
                 Do you really want to remove this idea?
             </div>
             <div class="popup-message">
-                <strong> {{ selectedIdea?.title }} </strong>
+                <strong> {{ selectedIdea()?.title }} </strong>
             </div> 
             <div class="action-buttons">
                 <button 
@@ -219,16 +219,16 @@
             <div class="popup-title">
                 Details:
             </div>
-            <div class="list-item" *ngIf="selectedIdea">
+            <div class="list-item" *ngIf="selectedIdea()">
                 <div class="idea-user">
-                    {{ selectedIdea.createdBy }} posted on 
-                    {{ selectedIdea.createdAt | date : "dd MMM, hh:mm"  }}:
+                    {{ selectedIdea()?.createdBy }} posted on 
+                    {{ selectedIdea()?.createdAt | date : "dd MMM, hh:mm"  }}:
                 </div>
                 <div class="idea-title">
-                    {{ selectedIdea.title }}
+                    {{ selectedIdea()?.title }}
                 </div>
                 <div class="idea-desc">
-                    {{ selectedIdea.description }}
+                    {{ selectedIdea()?.description }}
                 </div>
                 <div class="comments-container">
                     <div class="comments-title">
@@ -247,7 +247,7 @@
                             (click)="onSendComment()">
                       </div>
                     </form>
-                    @for (comment of selectedIdea.comments; track $index) {
+                    @for (comment of selectedIdea()?.comments; track $index) {
                         <div class="comment-header">
                             {{ comment.createdBy }} wrote on {{ comment.createdAt | date : "dd MMM, HH:mm" }}:
                             <img src="../../assets/remove-icon.svg" 
@@ -265,10 +265,10 @@
                 </div>
             </div>
             <div class="vote-details">
-                {{ selectedIdea?.voteCount }} vote(s)
-                <span *ngIf="(selectedIdea?.voteCount || 0) > 0">
-                    by @for (vote of selectedIdea?.votes; track $index) {
-                        {{ vote.createdBy + ($index + 1 === selectedIdea?.votes?.length ? '' : ', ') }}
+                {{ selectedIdea()?.voteCount }} vote(s)
+                <span *ngIf="(selectedIdea()?.voteCount || 0) > 0">
+                    by @for (vote of selectedIdea()?.votes; track $index) {
+                        {{ vote.createdBy + ($index + 1 === selectedIdea()?.votes?.length ? '' : ', ') }}
                     }
                 </span>
             </div>
@@ -290,7 +290,7 @@
                 Do you really want to delete this comment?
             </div>
             <div class="popup-message">
-                <i> {{ selectedComment?.text }} </i>
+                <i> {{ selectedComment()?.text }} </i>
             </div> 
             <div class="action-buttons">
                 <button 
@@ -352,5 +352,11 @@
             </div>
           }
       </div>
+    </div>
+}
+
+@if (isLoading()) {
+    <div class="spinner">
+        <img src="../../assets/Double Ring@1x-1.0s-200px-200px.svg" width="80px" alt="please, wait">
     </div>
 }

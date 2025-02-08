@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 
-import { IdeaBackendService } from './idea-backend.service';
+import { IdeaHttpService } from './idea-http.service';
 
 describe('IdeaService', () => {
-  let service: IdeaBackendService;
+  let service: IdeaHttpService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(IdeaBackendService);
+    service = TestBed.inject(IdeaHttpService);
   });
 
   it('should be created', () => {
