@@ -8,7 +8,7 @@ import { CreateIdeaDto } from './models/create-idea.dto';
 import { UpdateIdeaDto } from './models/update-idea.dto';
 import { AuthService } from '../auth/auth.service';
 import { Router } from '@angular/router';
-import { catchError, finalize, forkJoin, Observable, of, Subject, switchMap, takeUntil, tap } from 'rxjs';
+import { catchError, finalize, forkJoin, Observable, of, switchMap, tap } from 'rxjs';
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 
 @Component({
