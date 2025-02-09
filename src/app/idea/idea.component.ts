@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnDestroy, OnInit, signal, ViewChild } from '@angular/core';
+import { Component, DestroyRef, ElementRef, OnDestroy, OnInit, signal, ViewChild } from '@angular/core';
 import { IdeaHttpService } from './services/idea-http.service';
 import { IdeaSignalService } from './services/idea-signal.service';
 import { Idea, Comment } from './models/idea.entity';
@@ -8,7 +8,8 @@ import { CreateIdeaDto } from './models/create-idea.dto';
 import { UpdateIdeaDto } from './models/update-idea.dto';
 import { AuthService } from '../auth/auth.service';
 import { Router } from '@angular/router';
-import { finalize, Observable, switchMap, tap } from 'rxjs';
+import { catchError, finalize, Observable, of, Subject, switchMap, takeUntil, tap } from 'rxjs';
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 
 @Component({
   selector: 'app-idea',
@@ -49,6 +50,7 @@ export class IdeaComponent implements OnInit, OnDestroy {
     protected authService: AuthService,
     private formBuilder: FormBuilder,
     private router: Router,
+    private readonly destroyRef: DestroyRef,
   ) {}
   
   ngOnInit(): void {
@@ -70,27 +72,23 @@ export class IdeaComponent implements OnInit, OnDestroy {
   // load list of ideas on initialization
   loadIdeas() {
     this.isLoading.set(true);
-    this.getIdeasQuery().subscribe({
-      next: () => { },
-      error: (err) => {
-        console.log(err);
-        this.displayError(err.error.message);
-      }
-    });
+    this.getIdeasQuery().subscribe();
   }
 
   // returns the appropriate http request for list of ideas depending on the active tab
   getIdeasQuery(): Observable<{ideas: Idea[]}> {
-    if (this.tabState() === 1) {
-      return this.ideaHttpService.getFavouriteIdeas().pipe(
-        tap((response) => this.ideaSignalService.ideas.set(response.ideas)),
-        finalize(() => this.isLoading.set(false))
-    )} else {
-      return this.ideaHttpService.getAllIdeas().pipe(
-        tap((response) => this.ideaSignalService.ideas.set(response.ideas)),
-        finalize(() => this.isLoading.set(false))
-      );
-    }
+    const query = this.tabState() === 1 
+      ? this.ideaHttpService.getFavouriteIdeas() 
+      : this.ideaHttpService.getAllIdeas()
+    return query.pipe(
+      takeUntilDestroyed(this.destroyRef),
+      tap((response) => this.ideaSignalService.ideas.set(response.ideas)),
+      catchError((err) => {
+        this.displayError(err.error.message); 
+        return of({ ideas: [] }); // fallback observable to keep stream alive
+      }),
+      finalize(() => this.isLoading.set(false))
+    )
   }
 
   // switches to a selected tab (idea list) and initiates reload
@@ -117,16 +115,15 @@ export class IdeaComponent implements OnInit, OnDestroy {
     }
     this.ideaHttpService.createIdea(idea)
     .pipe(
-      switchMap(() => this.getIdeasQuery())
+      takeUntilDestroyed(this.destroyRef),
+      switchMap(() => this.getIdeasQuery()), // Fetch updated ideas after saving
+      catchError((err) => {
+        this.displayError(err.error?.message);
+        return of({ ideas: [] }); // Prevent stream from failing
+      }),
+      finalize(() => this.isLoading.set(false)) // Always reset loading state
     )
-    .subscribe({
-      next: () => { },
-      error: (err) => {
-        console.log(err);
-        this.isLoading.set(false);
-        this.displayError(err.error.message);
-      }
-    })
+    .subscribe(); 
   }
 
   // handles click on edit icon for an idea
@@ -151,18 +148,17 @@ export class IdeaComponent implements OnInit, OnDestroy {
     }
     this.ideaHttpService.updateIdea(this.selectedIdea()!._id, idea)
     .pipe(
-      switchMap(() => this.getIdeasQuery())
+      takeUntilDestroyed(this.destroyRef),
+      tap(() => this.selectedIdea.set(undefined)), // Clear selected idea after successful update
+      switchMap(() => this.getIdeasQuery()), // Fetch updated list after saving
+      catchError((err) => {
+        console.error(err);
+        this.displayError(err.error?.message);
+        return of({ ideas: [] }); // Prevents stream from failing
+      }),
+      finalize(() => this.isLoading.set(false)) // Always stops loading state
     )
-    .subscribe({
-      next: () => {
-        this.selectedIdea.set(undefined);
-      },
-      error: (err) => {
-        console.log(err);
-        this.isLoading.set(false);
-        this.displayError(err.error.message);
-      }
-    })
+    .subscribe();
   }
 
   // handles click on remove icon for an idea
@@ -178,39 +174,38 @@ export class IdeaComponent implements OnInit, OnDestroy {
     this.isLoading.set(true);
     this.ideaHttpService.removeIdea(this.selectedIdea()!._id)
     .pipe(
-      switchMap(() => this.getIdeasQuery())
+      takeUntilDestroyed(this.destroyRef),
+      tap(() => this.selectedIdea.set(undefined)),
+      switchMap(() => this.getIdeasQuery()),
+      catchError((err) => {
+        console.error(err);
+        this.displayError(err.error?.message);
+        return of({ ideas: [] }); // Prevents stream from failing
+      }),
+      finalize(() => this.isLoading.set(false)) // Always stops loading state
     )
-    .subscribe({
-      next: () => {
-        this.selectedIdea.set(undefined);
-      },
-      error: (err) => {
-        console.log(err);
-        this.isLoading.set(false);
-        this.displayError(err.error.message);
-      }
-    })
+    .subscribe()
   }
 
   // handles click on comments button or on vote/comment counter
   onDetailsClicked(ideaId: string) {
+    this.isLoading.set(true);
     this.ideaHttpService.getIdea(ideaId)
     .pipe(
+      takeUntilDestroyed(this.destroyRef),
       tap((response) => {
-        response.comments.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        response.comments.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         this.selectedIdea.set(response);
-      })
-    )
-    .subscribe({
-      next: () => {
         this.commentForm.reset();
         this.popupState.set(4);
-      },
-      error: (err) => {
-        console.log(err);
-        this.displayError(err.error.message);
-      }
-    })
+      }),
+      catchError((err) => {
+        this.displayError(err.error?.message);
+        return of(null); // Prevents stream from failing
+      }),
+      finalize(() => this.isLoading.set(false))
+    )
+    .subscribe();
   }
 
   // saves a new comment for the selected idea to database
@@ -220,22 +215,20 @@ export class IdeaComponent implements OnInit, OnDestroy {
     this.isLoading.set(true);
     this.ideaHttpService.addComment(this.selectedIdea()!._id, { text })
     .pipe(
+      takeUntilDestroyed(this.destroyRef),
       tap( (response) => {
         response.comments.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         this.selectedIdea.set(response);
-      }),
-      switchMap(() => this.getIdeasQuery())
-    )
-    .subscribe({
-      next: () => {
         this.commentForm.reset();
-      },
-      error: (err) => {
-        console.log(err);
-        this.isLoading.set(false);
-        this.displayError(err.error.message);
-      }
-    });
+      }),
+      switchMap(() => this.getIdeasQuery()),
+      catchError((err) => {
+        this.displayError(err.error?.message);
+        return of(null); // Prevents stream from failing
+      }),
+      finalize(() => this.isLoading.set(false))
+    )
+    .subscribe();
   }
 
   // handles click on remove icon next to a comment for an idea
@@ -251,24 +244,21 @@ export class IdeaComponent implements OnInit, OnDestroy {
     this.isLoading.set(true);
     this.ideaHttpService.removeComment(this.selectedIdea()!._id, this.selectedComment()!.id)
     .pipe(
+      takeUntilDestroyed(this.destroyRef),
       tap(() => {
         const index = this.selectedIdea()!.comments.findIndex(i => i.id === this.selectedComment()!.id);
         this.selectedIdea()!.comments.splice(index, 1);
         this.selectedComment.set(undefined);
-        
-      }),
-      switchMap(() => this.getIdeasQuery())
-    )
-    .subscribe({
-      next: () => {
         this.popupState.set(4);
-      },
-      error: (err) => {
-        console.log(err);
-        this.isLoading.set(false);
-        this.displayError(err.error.message);
-      }
-    })
+      }),
+      switchMap(() => this.getIdeasQuery()),
+      catchError((err) => {
+        this.displayError(err.error?.message);
+        return of(null); // Prevents stream from failing
+      }),
+      finalize(() => this.isLoading.set(false))
+    )
+    .subscribe();
   }
 
   // handles cancel button in a popup: closes the window
@@ -309,54 +299,55 @@ export class IdeaComponent implements OnInit, OnDestroy {
     if (!status) return;
     this.ideaHttpService.statusUpdate(this.selectedItems, status)
     .pipe(
-      switchMap(() => this.getIdeasQuery())
-    )
-    .subscribe({
-      next: () => {
+      takeUntilDestroyed(this.destroyRef),
+      tap(() => {
         this.selectedItems = []
         this.popupState.set(0);
-      },
-      error: (err) => {
-        console.log(err);
-        this.isLoading.set(false);
-        this.displayError(err.error.message);
-      }
-    })
+      }),
+      switchMap(() => this.getIdeasQuery()),
+      catchError((err) => {
+        this.displayError(err.error?.message);
+        return of({ ideas: [] }); // Prevents stream from failing
+      }),
+      finalize(() => this.isLoading.set(false))
+
+    )
+    .subscribe()
   }
 
   // submits a vote for an idea and saves to the database
   vote(ideaId: string) {
     this.ideaHttpService.addVote(ideaId)
     .pipe(
-      switchMap(() => this.getIdeasQuery())
+      takeUntilDestroyed(this.destroyRef),
+      switchMap(() => this.getIdeasQuery()),
+      catchError((err) => {
+        this.displayError(err.error?.message);
+        return of({ ideas: [] }); // Prevents stream from failing
+      }),
+      finalize(() => this.isLoading.set(false))
     )
-    .subscribe({
-      next: () => { },
-      error: (err) => {
-        console.log(err);
-        this.displayError(err.error.message);
-      }
-    })
+    .subscribe()
   }
 
   // removes the vote of the user from a specific idea
   unvote(ideaId: string) {
     this.ideaHttpService.removeVote(ideaId)
     .pipe(
-      switchMap(() => this.getIdeasQuery())
+      takeUntilDestroyed(this.destroyRef),
+      switchMap(() => this.getIdeasQuery()),
+      catchError((err) => {
+        this.displayError(err.error?.message);
+        return of({ ideas: [] }); // Prevents stream from failing
+      }),
+      finalize(() => this.isLoading.set(false))
     )
-    .subscribe({
-      next: () => { },
-      error: (err) => {
-        console.log(err);
-        this.displayError(err.error.message);
-      }
-    })
+    .subscribe()
   }
 
   // displays the error message in a popup
-  displayError(msg: string) {
-    this.errorMessage.set(msg);
+  displayError(msg?: string) {
+    this.errorMessage.set(msg || 'The requested operation was failed.');
     this.popupState.set(99);
   }
 
@@ -366,7 +357,7 @@ export class IdeaComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    
+
   }
 
 }
