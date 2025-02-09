@@ -205,13 +205,10 @@ export class IdeaComponent implements OnInit, OnDestroy {
     .pipe(
       takeUntilDestroyed(this.destroyRef),
       tap((response) => {
-        const sortedComments = response.comments.sort(
+        response.comments.sort(
           (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
-        this.selectedIdea.update(idea => {
-          if (!idea) return response; // If selectedIdea is undefined, set the full object
-          return { ...idea, comments: sortedComments }; // otherwise update the comments array only
-        });
+        this.selectedIdea.set(response);
         this.commentForm.reset();
         this.popupState.set(4);
       }),
@@ -237,7 +234,7 @@ export class IdeaComponent implements OnInit, OnDestroy {
           (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
         this.selectedIdea.update(idea => {
-          if (!idea) return idea;
+          if (!idea) return response;
           return { ...idea, comments: sortedComments }; // only update comments
         });
         this.commentForm.reset();
