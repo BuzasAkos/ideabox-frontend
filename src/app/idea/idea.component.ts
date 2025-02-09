@@ -205,8 +205,13 @@ export class IdeaComponent implements OnInit, OnDestroy {
     .pipe(
       takeUntilDestroyed(this.destroyRef),
       tap((response) => {
-        response.comments.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        this.selectedIdea.set(response);
+        const sortedComments = response.comments.sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        this.selectedIdea.update(idea => {
+          if (!idea) return response; // If selectedIdea is undefined, set the full object
+          return { ...idea, comments: sortedComments }; // otherwise update the comments array only
+        });
         this.commentForm.reset();
         this.popupState.set(4);
       }),
@@ -228,8 +233,13 @@ export class IdeaComponent implements OnInit, OnDestroy {
     .pipe(
       takeUntilDestroyed(this.destroyRef),
       tap( (response) => {
-        response.comments.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        this.selectedIdea.set(response);
+        const sortedComments = response.comments.sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        this.selectedIdea.update(idea => {
+          if (!idea) return idea;
+          return { ...idea, comments: sortedComments }; // only update comments
+        });
         this.commentForm.reset();
       }),
       switchMap(() => this.getIdeasQuery()),
@@ -257,8 +267,13 @@ export class IdeaComponent implements OnInit, OnDestroy {
     .pipe(
       takeUntilDestroyed(this.destroyRef),
       tap(() => {
-        const index = this.selectedIdea()!.comments.findIndex(i => i.id === this.selectedComment()!.id);
-        this.selectedIdea()!.comments.splice(index, 1);
+        this.selectedIdea.update(idea => {
+          if (!idea) return idea;
+          return {
+            ...idea,
+            comments: idea.comments.filter(comment => comment.id !== this.selectedComment()!.id)
+          };
+        });
         this.selectedComment.set(undefined);
         this.popupState.set(4);
       }),
