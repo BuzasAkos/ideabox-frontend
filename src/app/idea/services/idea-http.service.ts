@@ -5,6 +5,7 @@ import { Idea } from '../models/idea.entity';
 import { CreateIdeaDto } from '../models/create-idea.dto';
 import { UpdateIdeaDto } from '../models/update-idea.dto';
 import { forkJoin, Observable, tap } from 'rxjs';
+import { Choice } from '../models/choice.entity';
 
 @Injectable({
   providedIn: 'root'
@@ -69,6 +70,11 @@ export class IdeaHttpService {
     const url = `${this.baseUrl}/ideas/status`;
     const payload = { ideaIds, status }
     return this.http.patch<{message: string}>(url, payload);
+  }
+
+  getChoices() {
+    const url = `${this.baseUrl}/choices`;
+    return this.http.get<Choice[]>(url);
   }
 
   // test

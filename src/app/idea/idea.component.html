@@ -314,8 +314,8 @@
             </div>
             <div class="status-select">
                 <select name="status-dropdown" id="status-dropdown" #statusDropdown>
-                    @for (item of statusChoice; track $index) {
-                        <option value="{{ item }}"> {{ item }} </option>
+                    @for (item of statusChoice(); track $index) {
+                        <option value="{{ item.code }}"> {{ item.displayName }} </option>
                     }
                 </select>
             </div>

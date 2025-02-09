@@ -1,4 +1,4 @@
-import { Component, DestroyRef, ElementRef, OnDestroy, OnInit, signal, ViewChild } from '@angular/core';
+import { Component, computed, DestroyRef, ElementRef, OnDestroy, OnInit, signal, ViewChild } from '@angular/core';
 import { IdeaHttpService } from './services/idea-http.service';
 import { IdeaSignalService } from './services/idea-signal.service';
 import { Idea, Comment } from './models/idea.entity';
@@ -8,7 +8,7 @@ import { CreateIdeaDto } from './models/create-idea.dto';
 import { UpdateIdeaDto } from './models/update-idea.dto';
 import { AuthService } from '../auth/auth.service';
 import { Router } from '@angular/router';
-import { catchError, finalize, Observable, of, Subject, switchMap, takeUntil, tap } from 'rxjs';
+import { catchError, finalize, forkJoin, Observable, of, Subject, switchMap, takeUntil, tap } from 'rxjs';
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 
 @Component({
@@ -24,12 +24,9 @@ export class IdeaComponent implements OnInit, OnDestroy {
     'All Ideas',
     'Favourite Ideas'
   ]
-  statusChoice: string[] = [
-    'new',
-    'shortlist',
-    'selected',
-    'rejected'
-  ]
+  statusChoice = computed(() => 
+    this.ideaSignalService.choices().filter(choice => choice.field === 'status')
+  );
   newIdeaForm!: FormGroup;
   commentForm!: FormGroup;
   
@@ -72,7 +69,21 @@ export class IdeaComponent implements OnInit, OnDestroy {
   // load list of ideas on initialization
   loadIdeas() {
     this.isLoading.set(true);
-    this.getIdeasQuery().subscribe();
+    forkJoin({
+      ideas: this.ideaHttpService.getAllIdeas(),
+      choices: this.ideaHttpService.getChoices(),
+    })
+    .pipe(
+      takeUntilDestroyed(this.destroyRef),
+      tap((response) => this.ideaSignalService.ideas.set(response.ideas.ideas)),
+      tap((response) => this.ideaSignalService.choices.set(response.choices)),
+      catchError((err) => {
+        this.displayError(err.error.message); 
+        return of({ideas: [], choices: []}); // fallback observable to keep stream alive
+      }),
+      finalize(() => this.isLoading.set(false))
+    )
+    .subscribe();
   }
 
   // returns the appropriate http request for list of ideas depending on the active tab
@@ -94,7 +105,7 @@ export class IdeaComponent implements OnInit, OnDestroy {
   // switches to a selected tab (idea list) and initiates reload
   changeTab(index: number) {
     this.tabState.set(index);
-    this.loadIdeas();
+    this.getIdeasQuery().subscribe();
   }
 
   // handled click on Post new idea button
