@@ -88,10 +88,10 @@ export class IdeaComponent implements OnInit, OnDestroy {
 
   // returns the appropriate http request for list of ideas depending on the active tab
   getIdeasQuery(): Observable<{ideas: Idea[]}> {
-    const query = this.tabState() === 1 
+    const query$ = this.tabState() === 1 
       ? this.ideaHttpService.getFavouriteIdeas() 
       : this.ideaHttpService.getAllIdeas()
-    return query.pipe(
+    return query$.pipe(
       takeUntilDestroyed(this.destroyRef),
       tap((response) => this.ideaSignalService.ideas.set(response.ideas)),
       catchError((err) => {
