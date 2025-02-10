@@ -2,9 +2,11 @@ import { HttpInterceptorFn } from '@angular/common/http';
 import { AuthService } from './auth.service';
 import { inject } from '@angular/core';
 import { catchError, switchMap, throwError } from 'rxjs';
+import { Router } from '@angular/router';
 
 export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
     const authService = inject(AuthService);
+    const router = inject(Router);
     const token = authService.getToken();
   
     // Clone the request and add the Authorization header, if the token exists
@@ -27,6 +29,7 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
             const userData = authService.queryUserData();
             if (!userData.name) {
               console.error('Authentication failed: could not retrieve user data');
+              router.navigateByUrl('/login');
               return throwError(() => error); // Propagate the original error
             }
     
@@ -48,11 +51,13 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
     
                 // If no token is returned, propagate the original error
                 console.error('Re-authentication failed: no token received');
+                router.navigateByUrl('/login');
                 return throwError(() => error);
               }),
               catchError((authError) => {
                 // Handle errors during re-authentication
                 console.error('Authentication process failed:', authError);
+                router.navigateByUrl('/login');
                 return throwError(() => authError); // Propagate the error
               })
             );
