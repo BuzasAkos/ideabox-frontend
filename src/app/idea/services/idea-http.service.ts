@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { Idea } from '../models/idea.entity';
@@ -62,8 +62,9 @@ export class IdeaHttpService {
   }
 
   getFavouriteIdeas(): Observable<{ideas: Idea[]}> {
-    const url = `${this.baseUrl}/ideas/favourite`;
-    return this.http.get<{ideas: Idea[]}>(url);
+    const url = `${this.baseUrl}/ideas`;
+    const params = new HttpParams().set('favourite', true);
+    return this.http.get<{ideas: Idea[]}>(url, { params });
   }
 
   statusUpdate(ideaIds: string[], status: string): Observable<{message: string}> {
