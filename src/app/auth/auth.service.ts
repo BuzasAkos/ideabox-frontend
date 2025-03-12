@@ -10,7 +10,7 @@ import { tap } from 'rxjs';
 })
 export class AuthService {
   private jwt = signal<string | null>(null);
-  public user = signal<string | null>(null);
+  public user = signal<string | null>(this.queryUserData().name);
 
   baseUrl: string = `${environment.backend_url}/auth`;
 

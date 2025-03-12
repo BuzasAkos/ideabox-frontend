@@ -8,7 +8,7 @@ export const routes: Routes = [
         path: 'ideabox', 
         component: IdeaComponent, 
         pathMatch: 'full', 
-        canActivate: [authGuard] 
+        // canActivate: [authGuard] 
     },
     { 
         path: 'login', 
