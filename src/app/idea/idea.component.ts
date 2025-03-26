@@ -22,7 +22,8 @@ export class IdeaComponent implements OnInit, OnDestroy {
 
   tabs: string[] = [
     'All Ideas',
-    'Favourite Ideas'
+    'Favourite Ideas',
+    'Homework',
   ]
   statusChoice = computed(() => 
     this.ideaSignalService.choices().filter(choice => choice.field === 'status')
@@ -38,6 +39,8 @@ export class IdeaComponent implements OnInit, OnDestroy {
   popupState = signal<number>(0);
   tabState = signal<number>(0);
   errorMessage = signal<string | undefined>(undefined);
+
+  hwResults = signal<string | undefined>(undefined);
 
   @ViewChild('statusDropdown') statusDropdown?: ElementRef;
 
@@ -105,7 +108,8 @@ export class IdeaComponent implements OnInit, OnDestroy {
   // switches to a selected tab (idea list) and initiates reload
   changeTab(index: number) {
     this.tabState.set(index);
-    this.getIdeasQuery().subscribe();
+    if (index <= 1) this.getIdeasQuery().subscribe();
+    if (index === 2) this.hwResults.set(undefined);
   }
 
   // handled click on Post new idea button
@@ -127,6 +131,10 @@ export class IdeaComponent implements OnInit, OnDestroy {
     this.ideaHttpService.createIdea(idea)
     .pipe(
       takeUntilDestroyed(this.destroyRef),
+      catchError((err) => {
+        this.displayError(err.error?.message);
+        return of({ ideas: [] }); // Prevent stream from failing
+      }),
       switchMap(() => this.getIdeasQuery()), // Fetch updated ideas after saving
       catchError((err) => {
         this.displayError(err.error?.message);
@@ -372,6 +380,59 @@ export class IdeaComponent implements OnInit, OnDestroy {
   displayError(msg?: string) {
     this.errorMessage.set(msg || 'The requested operation was failed.');
     this.popupState.set(99);
+  }
+
+  // Feladatok
+
+  // log last comments
+  onLastCommentsClicked() {
+    this.isLoading.set(true);
+    this.ideaHttpService.getLastComments().pipe(
+      takeUntilDestroyed(this.destroyRef),
+      tap(response => {
+        console.log(response);
+        this.hwResults.set(JSON.stringify(response));
+      }),
+      catchError((err) => {
+        this.displayError(err.error?.message);
+        return of({ ideas: [] }); // Prevents stream from failing
+      }),
+      finalize(() => this.isLoading.set(false))
+    ).subscribe();
+  }
+
+  // log votes for ideas of a user
+  onVotesClicked() {
+    this.isLoading.set(true);
+    this.ideaHttpService.countVotes(this.authService.user() || 'Ákos').pipe(
+      takeUntilDestroyed(this.destroyRef),
+      tap(response => {
+        console.log(response);
+        this.hwResults.set(JSON.stringify(response));
+      }),
+      catchError((err) => {
+        this.displayError(err.error?.message);
+        return of({ ideas: [] }); // Prevents stream from failing
+      }),
+      finalize(() => this.isLoading.set(false))
+    ).subscribe();
+  }
+
+  // log ideas that I have commented
+  onMyCommentsClicked() {
+    this.isLoading.set(true);
+    this.ideaHttpService.getMyComments().pipe(
+      takeUntilDestroyed(this.destroyRef),
+      tap(response => {
+        console.log(response);
+        this.hwResults.set(JSON.stringify(response));
+      }),
+      catchError((err) => {
+        this.displayError(err.error?.message);
+        return of({ ideas: [] }); // Prevents stream from failing
+      }),
+      finalize(() => this.isLoading.set(false))
+    ).subscribe();
   }
 
   // navigates to login screen where ideaBox_user is reset

@@ -78,6 +78,26 @@ export class IdeaHttpService {
     return this.http.get<Choice[]>(url);
   }
 
+  // Feladatok
+
+  getLastComments() {
+    const url = `${this.baseUrl}/lastcomments`;
+    return this.http.get<{title: string, text: string, createdBy: string, createdAt: Date}[]>(url);
+  }
+
+  countVotes(user: string) {
+    const url = `${this.baseUrl}/votes/${user}`;
+    return this.http.get<{sumVotes: number}>(url);
+  }
+
+  getMyComments() {
+    const url = `${this.baseUrl}/mycomments`;
+    return this.http.get<Idea[]>(url);
+  }
+
+
+
+
   // test
   joinTest() {
     const url1 = `${this.baseUrl}/ideas`;

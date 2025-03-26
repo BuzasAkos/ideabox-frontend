@@ -18,7 +18,32 @@
         (click)="logoutClicked()">
 </div>
 
-<div class="action-buttons">
+@if (tabState() === 2) {
+    <div class="action-buttons">
+        <button 
+            class="primary-button"
+            (click)="onLastCommentsClicked()">
+            Last Comments
+        </button>
+        <button 
+            class="primary-button"
+            (click)="onVotesClicked()">
+            Votes received
+        </button>
+        <button 
+            class="primary-button"
+            (click)="onLastCommentsClicked()">
+            Ideas with my Comments
+        </button>
+    </div>
+
+    <div class="hw-results">
+        {{ hwResults() }}
+    </div>
+}
+
+@if (tabState() <= 1) {
+  <div class="action-buttons">
     <button 
         class="primary-button"
         *ngIf="selectedItems.length == 0"
@@ -37,9 +62,9 @@
         width="35"
         *ngIf="selectedItems.length > 0"
         (click)="clearSelection()">
-</div>
+  </div>
 
-<div class="idea-list">
+  <div class="idea-list">
     @for (idea of ideaSignalService.ideas(); track $index) {
         <div class="list-item list-card" (click)="onDetailsClicked(idea._id)">
             <div class="idea-user">
@@ -103,6 +128,7 @@
         </div>
     }
 </div>
+}
 
 @if (popupState() > 0) {
     <div class="popup-container">
