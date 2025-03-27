@@ -21,9 +21,11 @@ export class IdeaHttpService {
     return this.http.post<Idea>(url, payload);
   }
 
-  getAllIdeas(): Observable<{ideas: Idea[]}> {
+  getAllIdeas(searchText?: string): Observable<{ideas: Idea[]}> {
     const url = `${this.baseUrl}/ideas`;
-    return this.http.get<{ideas: Idea[]}>(url);
+    let params = new HttpParams();
+    if (searchText) params = params.set('search', searchText);
+    return this.http.get<{ideas: Idea[]}>(url, { params });
   }
   
   getIdea( id: string ): Observable<Idea> {
@@ -61,9 +63,10 @@ export class IdeaHttpService {
     return this.http.delete<{message: string}>(url);
   }
 
-  getFavouriteIdeas(): Observable<{ideas: Idea[]}> {
+  getFavouriteIdeas(searchText?: string): Observable<{ideas: Idea[]}> {
     const url = `${this.baseUrl}/ideas`;
-    const params = new HttpParams().set('favourite', true);
+    let params = new HttpParams().set('favourite', true);
+    if (searchText) params = params.set('search', searchText);
     return this.http.get<{ideas: Idea[]}>(url, { params });
   }
 

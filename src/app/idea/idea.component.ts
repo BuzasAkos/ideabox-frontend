@@ -8,7 +8,7 @@ import { CreateIdeaDto } from './models/create-idea.dto';
 import { UpdateIdeaDto } from './models/update-idea.dto';
 import { AuthService } from '../auth/auth.service';
 import { Router } from '@angular/router';
-import { catchError, finalize, forkJoin, Observable, of, switchMap, tap } from 'rxjs';
+import { catchError, debounceTime, delay, finalize, forkJoin, Observable, of, switchMap, tap } from 'rxjs';
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 
 @Component({
@@ -41,6 +41,8 @@ export class IdeaComponent implements OnInit, OnDestroy {
   errorMessage = signal<string | undefined>(undefined);
 
   hwResults = signal<string | undefined>(undefined);
+
+  searchText: string = '';
 
   @ViewChild('statusDropdown') statusDropdown?: ElementRef;
 
@@ -92,8 +94,8 @@ export class IdeaComponent implements OnInit, OnDestroy {
   // returns the appropriate http request for list of ideas depending on the active tab
   getIdeasQuery(): Observable<{ideas: Idea[]}> {
     const query$ = this.tabState() === 1 
-      ? this.ideaHttpService.getFavouriteIdeas() 
-      : this.ideaHttpService.getAllIdeas()
+      ? this.ideaHttpService.getFavouriteIdeas(this.searchText) 
+      : this.ideaHttpService.getAllIdeas(this.searchText)
     return query$.pipe(
       takeUntilDestroyed(this.destroyRef),
       tap((response) => this.ideaSignalService.ideas.set(response.ideas)),
@@ -433,6 +435,11 @@ export class IdeaComponent implements OnInit, OnDestroy {
       }),
       finalize(() => this.isLoading.set(false))
     ).subscribe();
+  }
+
+  // handle search input
+  onSearchInput() {
+    this.getIdeasQuery().subscribe();
   }
 
   // navigates to login screen where ideaBox_user is reset

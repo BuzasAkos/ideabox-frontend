@@ -51,6 +51,7 @@
         Post a new idea
     </button>
     <span class="placeholder"> </span>
+    <input class="search-input" type="text" [(ngModel)]="searchText" (change)="onSearchInput()">
     <button 
         class="primary-button"
         *ngIf="selectedItems.length > 0"
