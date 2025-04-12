@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { computed, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { jwtDecode } from 'jwt-decode';
@@ -11,6 +11,8 @@ import { tap } from 'rxjs';
 export class AuthService {
   private jwt = signal<string | null>(null);
   public user = signal<string | null>(this.queryUserData().name);
+  public roles = signal<string | null>(null);
+  public roleList = computed<string[]>(() => this.roles()?.split(', ') || [])
 
   baseUrl: string = `${environment.backend_url}/auth`;
 
@@ -77,15 +79,18 @@ export class AuthService {
   setUserFromToken(token: string | null): void {
     if (!token) {
       this.user.set(null);
+      this.roles.set(null);
       return;
     }
 
     try {
-      const decoded: { name: string } = jwtDecode(token);
+      const decoded: { name: string, roles: string } = jwtDecode(token);
       this.user.set(decoded.name); 
+      this.roles.set(decoded.roles);
     } catch (error) {
       console.error('Failed to decode token', error);
       this.user.set(null); 
+      this.roles.set(null); 
     }
   }
 

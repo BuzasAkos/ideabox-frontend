@@ -9,7 +9,7 @@
     <span class="placeholder"></span>
     <span class="log-info" 
         *ngIf="authService.user()"> 
-        logged in as {{ authService.user() }} 
+        logged in as <b>{{ authService.user() }}</b> ({{ authService.roles() || 'user' }})
     </span>
     <img src="../../assets/logout-icon.svg" alt=""
         height="20"
@@ -103,7 +103,7 @@
                     Unvote
                 </button>
                 <img 
-                    *ngIf="idea.createdBy === authService.user()"
+                    *ngIf="idea.createdBy === authService.user() || authService.roleList().includes('admin')"
                     src="../../assets/edit-icon.svg" 
                     alt="Edit idea" 
                     height="30"
@@ -111,7 +111,7 @@
                     (click)="onEditClicked(idea); $event.stopPropagation()"
                 >
                 <img 
-                    *ngIf="idea.createdBy === authService.user()"
+                    *ngIf="idea.createdBy === authService.user() || authService.roleList().includes('admin')"
                     src="../../assets/remove-icon.svg" 
                     alt="Remove idea" 
                     height="30"
