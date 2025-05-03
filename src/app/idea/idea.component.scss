@@ -315,6 +315,16 @@
 
     .comment-text {
         color: darkslategray;
+
+        &.positive {
+            color: green;
+            font-weight: 600;
+        }
+
+        &.negative {
+            color: red;
+            font-style: italic;
+        }
     }
 
     .comment-input-row {

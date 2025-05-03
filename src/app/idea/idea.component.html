@@ -120,6 +120,7 @@
                 >
                 <span class="placeholder"></span>
                 <input type="checkbox"
+                    *ngIf="authService.roleList().includes('supervisor')"
                     class="idea-checkbox"
                     (click)="$event.stopPropagation()"
                     (change)="onCheckboxChanged($event, idea._id)"
@@ -281,12 +282,15 @@
                                 height="24px" 
                                 alt="remove comment"
                                 class="remove-comment-icon"
-                                *ngIf="comment.createdBy === authService.user()"
+                                *ngIf="comment.createdBy === authService.user() || 
+                                    authService.roleList().includes('admin') ||
+                                    authService.roleList().includes('moderator')"
                                 (click)="onRemoveCommentClicked(comment)">
                         </div>
-                        <div class="comment-text">
+                        <div class="comment-text"
+                        [class.positive]="comment.sentiment === 'positive'"
+                        [class.negative]="comment.sentiment === 'negative'">
                             {{ comment.text }}
-
                         </div>
                     }
                 </div>

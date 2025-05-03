@@ -27,6 +27,8 @@ export interface Vote {
 export interface Comment {
     id: string;
     text: string;
+    aiChatRef?: string,
+    sentiment?: string,
     createdBy: string;
     createdAt: Date;
     modifiedBy: string;
