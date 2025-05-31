@@ -447,6 +447,21 @@ export class IdeaComponent implements OnInit, OnDestroy {
     this.router.navigateByUrl('login');
   }
 
+  getExpertOpinion() {
+    const idea = this.selectedIdea();
+    if (!idea) return;
+    const message = `What do you think about ${idea.title} (${idea.description}) as a team building program?`
+    const type = 'advisory';
+    this.isLoading.set(true);
+    this.ideaHttpService.createAiChat(type, message).pipe(
+      tap((resp) => {
+        const aiResponse = resp.chatMessages[1];
+        if (aiResponse) console.log(aiResponse.text);
+      }),
+      finalize(() => this.isLoading.set(false))
+    ).subscribe();
+  }
+
   ngOnDestroy(): void {
 
   }

@@ -6,6 +6,7 @@ import { CreateIdeaDto } from '../models/create-idea.dto';
 import { UpdateIdeaDto } from '../models/update-idea.dto';
 import { forkJoin, Observable, tap } from 'rxjs';
 import { Choice } from '../models/choice.entity';
+import { ChatResponseDto } from '../models/chat-response.dto';
 
 @Injectable({
   providedIn: 'root'
@@ -99,6 +100,12 @@ export class IdeaHttpService {
   }
 
 
+  // AI feladat
+  createAiChat(type: string, message: string) {
+    const url = `${this.baseUrl}/ai/new`;
+    const payload = { type, message }
+    return this.http.post<ChatResponseDto>(url, payload);
+  }
 
 
   // test
